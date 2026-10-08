@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>१ · माझ्या आजूबाजूच्या जगाची सुरुवात</title>
+<link rel="stylesheet" href="../lib/engine.css">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js"></script>
+<script src="audio/mr/timings.js"></script>
+<script>
+'use strict';
+const CHAPTER = { number: 1, title: 'माझ्या आजूबाजूच्या जगाची सुरुवात', minutes: 8, language: 'mr' };
+
+/* ---------- palette roles ---------- */
+const LIVE = COL.leaf, DEAD = COL.stone, SAFF = COL.int, SKY = COL.whole, PLUM = COL.irr, BARK = COL.bark;
+
+/* ---------- text helpers ---------- */
+const text = (p, str, x, y, t0, { size = 32, fill = COL.chalk, anchor = 'start', weight = 500, font = UI } = {}) => {
+  const e = T(p, str, { x, y, size, fill, anchor, weight, font, o: 0 }); show(e, t0); return e;
+};
+const title = (p, str, t0 = .1, y = 120) => text(p, str, 800, y, t0, { size: 52, weight: 800, anchor: 'middle', font: HEAD });
+const note = (p, str, x, y, t0, fill = SAFF, size = 36, r = -3) => {
+  const g = G(p, { x, y, o: 0, r }); T(g, str, { size, fill, font: SCRIPT, weight: 700, anchor: 'middle' }); show(g, t0); return g;
+};
+function label(p, str, x, y, t0, color = COL.chalk, size = 26) { return text(p, str, x, y, t0, { size, fill: color, anchor: 'middle', weight: 700 }); }
+// speech bubble: rounded rect with a tail, text centred
+function bubble(p, str, x, y, t0, { w = 420, color = SAFF, size = 30 } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  mk('path', { d: `M${-w / 2} -40h${w}a16 16 0 0 1 16 16v56a16 16 0 0 1-16 16h${-w / 2 + 40}l-24 26v-26h${-w / 2 + 8}a16 16 0 0 1-16-16v-56a16 16 0 0 1 16-16z`, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 12, size, fill: COL.chalk, weight: 600, anchor: 'middle' });
+  pop(g, t0); return g;
+}
+// rounded card
+function kcard(p, x, y, w, h, color, { o = 0, s = 1, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o, s });
+  mk('rect', { x: 0, y: 0, width: w, height: h, rx: 22, fill, stroke: COL.edge || '#f1e4d0', 'stroke-width': 2 }, g);
+  mk('path', { d: `M22 0h-4a18 18 0 0 0-18 18v${h - 36}a18 18 0 0 0 18 18h4z`, fill: color }, g);
+  return g;
+}
+
+/* ---------- drawn things, each around (0,0) on its baseline ---------- */
+function sun(p, x, y, r = 60) {
+  const g = G(p, { x, y, o: 0 });
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; mk('path', { d: `M${Math.cos(a) * (r + 14)} ${Math.sin(a) * (r + 14)}L${Math.cos(a) * (r + 34)} ${Math.sin(a) * (r + 34)}`, stroke: COL.sun, 'stroke-width': 6, 'stroke-linecap': 'round' }, g); }
+  mk('circle', { r, fill: COL.sun }, g);
+  return g;
+}
+function tree(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-14 0V-90q0-14 14-14q14 0 14 14V0z', fill: BARK }, g);
+  mk('circle', { cx: 0, cy: -150, r: 70, fill: COL.leaf2 }, g);
+  mk('circle', { cx: -52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 0, cy: -110, r: 50, fill: COL.leaf2 }, g);
+  g._crown = g;
+  return g;
+}
+function cow(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -70, y: -90, width: 140, height: 70, rx: 30, fill: '#f5efe6', stroke: COL.chalk, 'stroke-width': 3 }, g);
+  mk('ellipse', { cx: -20, cy: -70, rx: 18, ry: 14, fill: '#4b4b55' }, g); mk('ellipse', { cx: 30, cy: -45, rx: 16, ry: 12, fill: '#4b4b55' }, g);
+  [-50, -20, 20, 50].forEach(lx => mk('rect', { x: lx - 7, y: -24, width: 14, height: 26, rx: 5, fill: '#e6dccd', stroke: COL.chalk, 'stroke-width': 2 }, g));
+  mk('rect', { x: 56, y: -112, width: 48, height: 46, rx: 18, fill: '#f5efe6', stroke: COL.chalk, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M62 -112q-4-18 10-20M98 -112q4-18-10-20', stroke: COL.chalk, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('circle', { cx: 74, cy: -94, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 90, cy: -94, r: 3.5, fill: COL.chalk }, g);
+  mk('ellipse', { cx: 82, cy: -76, rx: 14, ry: 8, fill: COL.rose }, g);
+  const tail = mk('path', { d: 'M-70 -80q-24 10-18 44', stroke: COL.chalk, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+  return g;
+}
+function dog(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -56, y: -64, width: 96, height: 46, rx: 22, fill: '#d9a066', stroke: COL.chalk, 'stroke-width': 3 }, g);
+  [-40, -16, 10, 30].forEach(lx => mk('rect', { x: lx - 6, y: -22, width: 12, height: 22, rx: 5, fill: '#c98c52', stroke: COL.chalk, 'stroke-width': 2 }, g));
+  const head = G(g, { x: 44, y: -70 });
+  mk('circle', { r: 26, fill: '#d9a066', stroke: COL.chalk, 'stroke-width': 3 }, head);
+  mk('path', { d: 'M-18 -18q-14-10-10 14M18 -18q14-10 10 14', stroke: COL.chalk, 'stroke-width': 3, fill: '#8a5a2b' }, head);
+  mk('circle', { cx: -8, cy: -4, r: 3.5, fill: COL.chalk }, head); mk('circle', { cx: 8, cy: -4, r: 3.5, fill: COL.chalk }, head);
+  mk('circle', { cx: 0, cy: 8, r: 5, fill: COL.chalk }, head);
+  mk('path', { d: 'M-6 14q6 6 12 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, head);
+  const tail = path(g, 'M-56 -52q-22-18-16-40', { stroke: COL.chalk, 'stroke-width': 4 }); put(tail, { x: 0, y: 0 });
+  g._tail = tail; g._chest = g;
+  return g;
+}
+function sparrow(p, x, y, s = 1, flip = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  const b = G(g, { s: 1 }); b.setAttribute('transform', `scale(${flip},1)`);
+  mk('ellipse', { rx: 20, ry: 13, fill: '#a3744a', stroke: COL.chalk, 'stroke-width': 2 }, b);
+  mk('circle', { cx: 18, cy: -8, r: 9, fill: '#a3744a', stroke: COL.chalk, 'stroke-width': 2 }, b);
+  mk('path', { d: 'M26 -8l10 2-10 3z', fill: SAFF }, b);
+  mk('circle', { cx: 20, cy: -10, r: 1.8, fill: COL.chalk }, b);
+  mk('path', { d: 'M-6 -4q-10-12 4-14q10 2 8 12', fill: '#8a5a2b' }, b);
+  mk('path', { d: 'M-20 0l-12-4M-20 2l-12 2', stroke: COL.chalk, 'stroke-width': 2 }, b);
+  return g;
+}
+function bicycle(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  const w1 = mk('circle', { cx: -48, cy: -30, r: 30, fill: 'none', stroke: DEAD, 'stroke-width': 5 }, g);
+  const w2 = mk('circle', { cx: 48, cy: -30, r: 30, fill: 'none', stroke: DEAD, 'stroke-width': 5 }, g);
+  mk('path', { d: 'M-48 -30L-14 -78H30L48 -30M-14 -78L0 -30L-48 -30M0 -30L30 -78M30 -78l-6-12h12M-14 -78l-10-8h18', stroke: DEAD, 'stroke-width': 5, fill: 'none', 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, g);
+  g._w = [w1, w2];
+  return g;
+}
+function stone(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-50 0q-10-34 20-44q34-12 56 10q14 20-6 34z', fill: COL.stone2, stroke: DEAD, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-24 -26q10-8 22-4', stroke: '#fff', 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round', opacity: .7 }, g);
+  return g;
+}
+function wall(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -80, y: -100, width: 160, height: 100, rx: 6, fill: '#f3d9b1', stroke: BARK, 'stroke-width': 3 }, g);
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) mk('rect', { x: -74 + c * 52 + (r % 2) * 26 - 6, y: -96 + r * 25, width: 46, height: 20, rx: 3, fill: '#e8b37d', stroke: BARK, 'stroke-width': 1.5, opacity: .8 }, g);
+  return g;
+}
+function boy(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -22, y: -120, width: 44, height: 70, rx: 14, fill: SKY }, g);            // shirt
+  mk('rect', { x: -20, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g); mk('rect', { x: 3, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g);
+  mk('circle', { cx: 0, cy: -146, r: 30, fill: '#f1c7a0' }, g);                             // head
+  mk('path', { d: 'M-30 -152q4-30 30-30q26 0 30 30q-18-10-30-6q-12-4-30 6z', fill: '#2b2a33' }, g);  // hair
+  mk('circle', { cx: -10, cy: -148, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 10, cy: -148, r: 3.5, fill: COL.chalk }, g);
+  mk('path', { d: 'M-9 -134q9 8 18 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('path', { d: 'M-22 -108l-18 30M22 -108l18 30', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);  // arms
+  return g;
+}
+function car(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-80 -20h160v-30h-40l-24-30h-56l-24 30h-16z', fill: '#f87171', stroke: COL.chalk, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  mk('rect', { x: -40, y: -74, width: 30, height: 22, rx: 4, fill: COL.sky }, g); mk('rect', { x: 0, y: -74, width: 34, height: 22, rx: 4, fill: COL.sky }, g);
+  const w1 = mk('circle', { cx: -44, cy: -18, r: 16, fill: '#2b2a33' }, g), w2 = mk('circle', { cx: 44, cy: -18, r: 16, fill: '#2b2a33' }, g);
+  g._w = [w1, w2];
+  return g;
+}
+function fan(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M0 0V-40', stroke: DEAD, 'stroke-width': 8, 'stroke-linecap': 'round' }, g);
+  mk('rect', { x: -40, y: -8, width: 80, height: 8, rx: 4, fill: DEAD }, g);
+  const bl = G(g, { y: -70 });
+  [0, 120, 240].forEach(a => mk('ellipse', { cx: 0, cy: -26, rx: 12, ry: 30, fill: '#9fc5f8', stroke: SKY, 'stroke-width': 2, transform: `rotate(${a})` }, bl));
+  mk('circle', { r: 10, fill: SKY }, bl);
+  g._blades = bl;
+  return g;
+}
+// ground line
+const ground = (p, y = 700, t0 = .1) => { const l = path(p, `M80 ${y}H1520`, { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(l, t0, 1); return l; };
+// a slow wag / spin
+const wag = (e, t0, n = 4) => { for (let i = 0; i < n; i++) { tw(e, { r: 18 }, t0 + i * .5, .25, io); tw(e, { r: -10 }, t0 + i * .5 + .25, .25, io); } tw(e, { r: 0 }, t0 + n * .5, .2); };
+const spin = (e, t0, dur = 3) => prog(q => put(e, { r: q * 360 * 2 }), t0, dur, lin);
+
+/* ---------- objects for questions ---------- */
+const OBJ = { cow: ['गाय', LIVE], dog: ['कुत्रा', LIVE], bird: ['चिमणी', LIVE], tree: ['झाड', LIVE], cycle: ['सायकल', DEAD], wall: ['भिंत', DEAD], stone: ['दगड', DEAD] };
+const LD = [['l', 'जिवंत', LIVE], ['d', 'निर्जीव', DEAD]];
+
+/* ---------- beats ---------- */
+const BEATS = [
+  ['intro', 'माझ्या आजूबाजूच्या जगाची सुरुवात', (m, D) => {
+    const bg = G(scene, { o: 0 });
+    mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: 'url(#dawnGrad)' }, bg);
+    const defs = mk('defs', {}, bg);
+    const gr = mk('linearGradient', { id: 'dawnGrad', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    mk('stop', { offset: 0, 'stop-color': COL.sky }, gr); mk('stop', { offset: .55, 'stop-color': '#ffe6c2' }, gr); mk('stop', { offset: 1, 'stop-color': COL.board }, gr);
+    tw(bg, { o: 1 }, 0, 1);
+    const s = sun(scene, 800, 760, 90); tw(s, { o: 1, y: 640 }, .2, 2.4, out);
+    const g = G(scene, { o: 0, y: 24 });
+    T(g, 'नवयान · दिवस १ · धडा १', { x: 800, y: 250, size: 26, fill: SAFF, weight: 700, anchor: 'middle' });
+    T(g, 'माझ्या आजूबाजूच्या', { x: 800, y: 350, size: 80, weight: 800, anchor: 'middle', font: HEAD });
+    T(g, 'जगाची सुरुवात', { x: 800, y: 450, size: 80, weight: 800, anchor: 'middle', font: HEAD });
+    tw(g, { o: 1, y: 0 }, .3, 1.1, out);
+    const r = text(scene, 'जिवंत म्हणजे काय?', 800, 560, m('sub'), { size: 40, fill: COL.dim, anchor: 'middle', font: SCRIPT, weight: 700 });
+    tw(g, { o: 0, y: -24 }, D - .9, .8); hide(r, D - .9, .8); hide(s, D - .9, .8); hide(bg, D - .9, .8);
+  }],
+
+  ['dawn', 'पहाटेचे पाच वाजले', (m, D) => {
+    const p = panel(0);
+    const sky = mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: COL.night, opacity: .9 }, p);
+    put(sky, { c_fill: COL.night });
+    const hill = mk('path', { d: 'M0 640q400-90 800-40t800 20V900H0z', fill: '#cfe3b0' }, p);
+    const s = sun(p, 1470, 720, 70); tw(s, { o: 1 }, .1, .3);
+    T(p, 'पहाटेचे पाच वाजले होते.', { x: 800, y: 110, size: 40, fill: '#fff', weight: 700, anchor: 'middle', font: HEAD });
+    // sun rises; sky turns from blue to saffron
+    tw(s, { y: 600 }, m('sun'), 3.5, io);
+    tw(sky, { c_fill: '#3b82f6' }, m('sun'), 1.6, io); tw(sky, { c_fill: '#fdba74' }, m('sun', 1.6), 2.2, io);
+    const rooster = text(p, 'कुकूऽऽच कू!', 280, 420, m('sun', 1.2), { size: 30, fill: '#fff', font: SCRIPT, weight: 700, anchor: 'middle' });
+    hide(rooster, m('sun', 3.4), .6);
+    // two walkers
+    const w1 = G(p, { x: -60, y: 640, o: 0 }), w2 = G(p, { x: -200, y: 660, o: 0 });
+    [w1, w2].forEach((w, i) => {
+      mk('rect', { x: -14, y: -80, width: 28, height: 50, rx: 10, fill: i ? '#f472b6' : '#60a5fa' }, w);
+      mk('circle', { cy: -96, r: 16, fill: '#f1c7a0' }, w);
+      mk('rect', { x: -12, y: -30, width: 10, height: 30, rx: 4, fill: '#6b4f3a' }, w); mk('rect', { x: 2, y: -30, width: 10, height: 30, rx: 4, fill: '#6b4f3a' }, w);
+      mk('rect', { x: 18, y: -54, width: 18, height: 26, rx: 4, fill: i ? COL.stone2 : '#e5e7eb', stroke: COL.chalk, 'stroke-width': 2 }, w);
+      show(w, m('walk'), .4); tw(w, { x: 360 + i * 110 }, m('walk'), 5, lin);
+    });
+    label(p, 'दुधाची कॅन · पाण्याची बादली', 420, 760, m('walk', 1.5), COL.chalk, 24);
+    // the house and the mother's call
+    const house = G(p, { x: 1180, y: 660, o: 0 });
+    mk('rect', { x: -130, y: -140, width: 260, height: 140, rx: 8, fill: '#fde68a', stroke: BARK, 'stroke-width': 3 }, house);
+    mk('path', { d: 'M-150 -140L0 -240L150 -140z', fill: '#c2410c' }, house);
+    mk('rect', { x: -30, y: -80, width: 60, height: 80, rx: 6, fill: BARK }, house);
+    show(house, m('aai'), .4);
+    bubble(p, 'अरे, उठ! सूर्य निघतोय!', 1180, 350, m('aai', .6), { w: 460 });
+    bubble(p, 'आई… अजून पाच मिनिटं.', 760, 470, m('aai', 2.6), { w: 440, color: SKY, size: 28 });
+    bubble(p, 'पाच मिनिटं म्हणजे अर्धा तास!', 1180, 350, m('aai', 4.8), { w: 520 });
+    const b = boy(p, 1000, 660); show(b, m('boy'), .5);
+    note(p, 'मुलगा हसला', 1000, 760, m('boy', .8), SAFF, 32);
+  }],
+
+  ['yard', 'यातलं जिवंत काय आहे?', (m) => {
+    const p = panel(0);
+    ground(p, 700, .1);
+    const b = boy(p, 800, 700, .9); show(b, .2, .5);
+    const items = {
+      cow: cow(p, 250, 700, .95), dog: dog(p, 520, 700, .95), tree: tree(p, 1300, 700, 1), bird: null,
+      cycle: bicycle(p, 1080, 700, .9), wall: wall(p, 1460, 700, .7), stone: stone(p, 640, 700, .8),
+    };
+    S.yard = items;
+    const birds = G(p, { o: 0 }); sparrow(birds, 1250, 540, .9); sparrow(birds, 1330, 520, .8, -1); [...birds.children].forEach(c => put(c, { o: 1 }));
+    show(items.cow, m('cow'), .4); label(p, 'गाय', 250, 760, m('cow', .3), LIVE);
+    show(items.dog, m('dog'), .4); wag(items.dog._tail, m('dog', .4)); label(p, 'कुत्रा', 520, 760, m('dog', .3), LIVE);
+    show(items.tree, m('tree'), .4); label(p, 'झाड', 1300, 760, m('tree', .3), LIVE);
+    show(birds, m('bird'), .4); label(p, 'चिमण्या', 1290, 470, m('bird', .3), LIVE, 24);
+    show(items.cycle, m('cycle'), .4); label(p, 'सायकल', 1080, 760, m('cycle', .3), DEAD);
+    show(items.wall, m('wall'), .4); label(p, 'भिंत', 1460, 760, m('wall', .3), DEAD);
+    show(items.stone, m('stone'), .4); label(p, 'दगड', 640, 760, m('stone', .3), DEAD);
+    const q = G(p, { x: 800, y: 150, o: 0, s: .8 });
+    mk('rect', { x: -360, y: -52, width: 720, height: 90, rx: 45, fill: '#fff', stroke: SAFF, 'stroke-width': 3 }, q);
+    T(q, 'यातलं जिवंत काय आहे?', { y: 12, size: 44, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD });
+    pop(q, m('q'));
+  }],
+
+  ['look', 'थांबा… आणि पाहा!', (m) => {
+    const p = panel(0);
+    title(p, 'थांबा… आणि पाहा!', .1);
+    text(p, 'आत्ता तुम्ही जिथे बसला आहात, तिथेच आजूबाजूला बघा.', 800, 190, .6, { size: 30, fill: COL.dim, anchor: 'middle' });
+    const frame = (x, str, color, t0, draw_) => {
+      const g = kcard(p, x - 190, 260, 380, 400, color, { o: 0 }); tw(g, { o: 1 }, t0, .5);
+      T(g, str, { x: 190, y: 60, size: 36, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+      const inner = G(g, { x: 190, y: 330 }); draw_(inner);
+      mk('circle', { cx: 190, cy: 360, r: 0 }, g);
+      return g;
+    };
+    frame(330, 'एक झाड शोधा', LIVE, m('tree'), gg => { const t = tree(gg, 0, 0, .9); show(t, m('tree', .3)); });
+    frame(800, 'एखादा प्राणी शोधा', LIVE, m('animal'), gg => { const d = dog(gg, 0, 0, 1.1); show(d, m('animal', .3)); wag(d._tail, m('animal', .6), 3); });
+    frame(1270, 'एक दगड शोधा', DEAD, m('stone'), gg => { const s = stone(gg, 0, 0, 1.3); show(s, m('stone', .3)); });
+    const w = note(p, 'फक्त उत्तर देऊ नका… का? याचा विचार करा.', 800, 760, m('why'), SAFF, 40);
+  }],
+
+  ['q1', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'c-ld', prompt: ['प्रत्येक गोष्ट जिवंत आहे की निर्जीव?'],
+    build: grid([
+      { parts: ['गाय'], ans: ['l'], why: 'गाय वाढते, खाते, श्वास घेते, वासराला जन्म देते.' },
+      { parts: ['सायकल'], ans: ['d'], why: 'सायकल चालते, पण स्वतःहून नाही. ती वाढत नाही, खात नाही.' },
+      { parts: ['चिमणी'], ans: ['l'], why: 'चिमणी उडते, खाते, पिल्लं जन्माला घालते.' },
+      { parts: ['दगड'], ans: ['d'], why: 'दगड कालही तसाच, आजही तसाच. वाढ नाही, अन्न नाही, श्वास नाही.' },
+      { parts: ['झाड'], ans: ['l'], why: 'झाड वाढतं, नवीन पानं येतात, फुलं येतात. ते जिवंत आहे.' },
+      { parts: ['भिंत'], ans: ['d'], why: 'भिंत स्वतःहून मोठी होत नाही.' },
+    ], LD, { multi: false, text: true }),
+  }], done, 'छोटी तपासणी') }],
+
+  ['grow', 'एक छोटा प्रयोग', (m) => {
+    const p = panel(0);
+    title(p, 'चला, एक छोटा प्रयोग करूया', .1, 100);
+    ground(p, 700, .1);
+    const b = boy(p, 560, 700, .85); show(b, .3, .5);
+    // the tree: yesterday (faint) and today (grows)
+    const t = tree(p, 330, 700, .9); show(t, .3, .5);
+    label(p, 'काल', 330, 760, .4, COL.dim);
+    const leaf = mk('ellipse', { cx: 395, cy: 585, rx: 14, ry: 8, fill: COL.leaf, transform: 'rotate(-30 395 585)' }, p);
+    put(leaf, { o: 0 }); show(leaf, m('leaf'), .3); for (let i = 0; i < 3; i++) { tw(leaf, { x: 6 }, m('leaf', .4 + i * .4), .2); tw(leaf, { x: 0 }, m('leaf', .6 + i * .4), .2); }
+    const t2 = tree(p, 330, 700, .9); show(t2, m('grow'), .6); tw(t2, { s: 1.08, x: 330 }, m('grow'), 2, io); hide(t, m('grow'), .6);
+    const lbl2 = label(p, 'आज: थोडं मोठं · नवीन पानं · फुलं', 330, 760, m('grow', .5), LIVE); const lblk = p.querySelector('text');
+    for (let i = 0; i < 6; i++) { const f = mk('circle', { cx: 330 + Math.cos(i * 1.05) * 60, cy: 560 + Math.sin(i * 1.05) * 50, r: 9, fill: COL.rose, stroke: '#fff', 'stroke-width': 2 }, p); put(f, { s: 0, o: 0 }); pop(f, m('grow', 1.3 + i * .15)); }
+    note(p, 'झाड वाढत होतं', 330, 460, m('grow', 2.6), LIVE, 34);
+    // the dog: gets up, walks, drinks, breathes
+    const d = dog(p, 820, 700, .95); show(d, m('dogup'), .4); tw(d, { x: 980 }, m('dogup', .5), 1.6, io);
+    const bowl = G(p, { x: 1080, y: 700, o: 0 }); mk('path', { d: 'M-34 -4q0 -20 34 -20q34 0 34 20L26 10H-26z', fill: COL.sky, stroke: SKY, 'stroke-width': 3 }, bowl);
+    show(bowl, m('drink'), .3); tw(d, { r: 6 }, m('drink', .3), .5); tw(d, { r: 0 }, m('drink', 1.3), .5);
+    label(p, 'पाणी · अन्न', 1080, 760, m('drink', .4), LIVE, 24);
+    for (let i = 0; i < 3; i++) { tw(d, { s: 1 }, m('breath', i * .9), .45, io); tw(d, { s: .95 }, m('breath', i * .9 + .45), .45, io); }
+    note(p, 'कुत्रा जिवंत होता', 980, 500, m('breath', 2.4), LIVE, 34);
+    // the stone: identical
+    const s1 = stone(p, 1360, 700, .9); show(s1, m('stone'), .3);
+    label(p, 'काल = आज', 1360, 760, m('stone', .6), DEAD);
+    const x = G(p, { x: 1360, y: 560, o: 0 });
+    ['अन्न ✗', 'श्वास ✗', 'वाढ ✗'].forEach((s, i) => T(x, s, { y: i * 40, size: 26, fill: DEAD, weight: 700, anchor: 'middle' }));
+    show(x, m('stone', 1.8), .5);
+    note(p, 'दगड निर्जीव', 1360, 470, m('stone', 4.2), DEAD, 34);
+  }],
+
+  ['wait', 'पण एक मिनिट!', (m) => {
+    const p = panel(0);
+    title(p, 'पण एक मिनिट!', .1);
+    text(p, 'जर आपण म्हणालो: “जे हालचाल करतं ते जिवंत.” तर?', 800, 190, .5, { size: 30, fill: COL.dim, anchor: 'middle' });
+    ground(p, 640, .2);
+    const c = car(p, 330, 640, 1.1); show(c, m('car'), .3); tw(c, { x: 470 }, m('car', .3), 1.6, io); c._w.forEach(w => { put(w, { r: 0 }); }); label(p, 'गाडी चालते', 420, 700, m('car', .4), DEAD);
+    const f = fan(p, 800, 640, 1.2); show(f, m('fan'), .3); spin(f._blades, m('fan', .3), 3); label(p, 'पंखा फिरतो', 800, 700, m('fan', .4), DEAD);
+    const bc = bicycle(p, 1180, 640, 1); show(bc, m('cycle'), .3); tw(bc, { x: 1300 }, m('cycle', .3), 1.6, io); label(p, 'सायकल चालते', 1240, 700, m('cycle', .4), DEAD);
+    const banner = G(p, { x: 800, y: 800, o: 0, s: .8 });
+    mk('rect', { x: -440, y: -46, width: 880, height: 90, rx: 45, fill: '#fff1f0', stroke: COL.bad, 'stroke-width': 3 }, banner);
+    T(banner, 'हालचाल म्हणजेच जीवन नाही', { y: 14, size: 42, fill: COL.bad, weight: 800, anchor: 'middle', font: HEAD });
+    pop(banner, m('cross'));
+    const cross = path(p, 'M320 290L1280 610M1280 290L320 610', { stroke: COL.bad, 'stroke-width': 10, opacity: .35 }, { d: 0 }); draw(cross, m('cross', .2), .8);
+  }],
+
+  ['q2', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 200, w: 1000, cls: 'side', maxH: 500 }, [{
+    id: 'c-fan', prompt: ['पंखा फिरतो. मग पंखा जिवंत आहे का?'],
+    build: choice([
+      ['नाही. तो फिरतो, पण वाढत नाही, अन्न खात नाही, श्वास घेत नाही.'],
+      ['हो. जे हालचाल करतं ते जिवंत.'],
+      ['हो. त्याला वीज लागते, म्हणजे अन्न लागतं.'],
+    ], 0, 'बरोबर! हालचाल म्हणजेच जीवन नाही. जिवंत असण्यासाठी वाढ, अन्न, श्वास लागतो.', [
+      null,
+      'हाच तो सापळा! गाडी चालते, पंखा फिरतो, पण ते जिवंत नाहीत.',
+      'वीज हे अन्न नाही. पंखा वाढत नाही आणि श्वासही घेत नाही.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['signs', 'जीवनाची लक्षणं', (m) => {
+    const p = panel(0);
+    title(p, 'जिवंत गोष्टींमध्ये आणखी काय असतं?', .1, 100);
+    const s1 = kcard(p, 90, 160, 1420, 300, LIVE, { o: 0 }); tw(s1, { o: 1 }, m('sign1'), .5);
+    T(s1, 'लक्षण १ — वाढ', { x: 40, y: 56, size: 36, fill: LIVE, weight: 800, font: HEAD });
+    const pair = (g, x, mark, mk1, mk2, cap) => {
+      const a = mk1(g, x - 70, 250); show(a, m(mark), .4);
+      const ar = path(g, `M${x - 20} 190H${x + 20}`, { stroke: COL.dim, 'stroke-width': 4 }, { d: 0 }); draw(ar, m(mark, .3), .4);
+      mk('path', { d: `M${x + 12} 182l10 8-10 8`, stroke: COL.dim, 'stroke-width': 4, fill: 'none' }, g);
+      const b = mk2(g, x + 90, 250); show(b, m(mark, .6), .4);
+      const t = T(g, cap, { x, y: 285, size: 24, fill: COL.chalk, weight: 700, anchor: 'middle', o: 0 }); show(t, m(mark, .8));
+    };
+    pair(s1, 240, 'boy1', (g, x, y) => boy(g, x, y, .5), (g, x, y) => boy(g, x, y, .75), 'लहान → मोठा');
+    pair(s1, 620, 'calf', (g, x, y) => cow(g, x, y, .45), (g, x, y) => cow(g, x, y, .7), 'वासरू → गाय');
+    pair(s1, 1000, 'sapling', (g, x, y) => tree(g, x, y, .35), (g, x, y) => tree(g, x, y, .6), 'रोप → झाड');
+    const w = wall(s1, 1300, 250, .6); show(w, m('wall'), .4); const wt = T(s1, 'भिंत: तशीच ✗', { x: 1300, y: 285, size: 24, fill: DEAD, weight: 700, anchor: 'middle', o: 0 }); show(wt, m('wall', .5));
+    const s2 = kcard(p, 90, 490, 1420, 340, SAFF, { o: 0 }); tw(s2, { o: 1 }, m('sign2'), .5);
+    T(s2, 'लक्षण २ — अन्न', { x: 40, y: 56, size: 36, fill: SAFF, weight: 800, font: HEAD });
+    const c2 = cow(s2, 300, 300, .7); show(c2, m('food'), .4); const grass = T(s2, '🌿 गवत', { x: 300, y: 325, size: 24, anchor: 'middle', o: 0 }); show(grass, m('food', .3));
+    const d2 = dog(s2, 600, 300, .8); show(d2, m('food', .8), .4); const fd = T(s2, '🍚 अन्न', { x: 600, y: 325, size: 24, anchor: 'middle', o: 0 }); show(fd, m('food', 1.1));
+    const t2 = tree(s2, 920, 300, .6); show(t2, m('tree'), .4); const tq = T(s2, 'झाड? ताट नाही!', { x: 920, y: 325, size: 24, fill: SAFF, weight: 700, anchor: 'middle', o: 0 }); show(tq, m('tree', .4));
+    // leaf as kitchen
+    const k = G(s2, { x: 1230, y: 200, o: 0, s: .7 });
+    mk('path', { d: 'M-90 0q0-80 90-90q90 10 90 90q-90 20-180 0z', fill: COL.leaf2, stroke: LIVE, 'stroke-width': 3 }, k);
+    mk('path', { d: 'M-30 20V-40h60V20z', fill: '#fff', stroke: BARK, 'stroke-width': 3 }, k);
+    mk('path', { d: 'M-40 -40h80', stroke: BARK, 'stroke-width': 5, 'stroke-linecap': 'round' }, k);
+    mk('path', { d: 'M-12 -56q6-14 0-28M12 -56q6-14 0-28', stroke: COL.dim, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, k);
+    pop(k, m('kitchen'));
+    const kt = T(s2, 'पान = छोटंसं स्वयंपाकघर!', { x: 1230, y: 325, size: 26, fill: LIVE, weight: 800, anchor: 'middle', o: 0 }); show(kt, m('kitchen', .4));
+  }],
+
+  ['science', 'विज्ञान म्हणजे काय?', (m) => {
+    const p = panel(0);
+    title(p, 'विज्ञान म्हणजे काय?', .1);
+    text(p, 'फक्त पुस्तकातली माहिती नाही…', 800, 190, .5, { size: 30, fill: COL.dim, anchor: 'middle' });
+    const steps = [['पाहणे', '👀', 'see', SKY], ['प्रश्न विचारणे', '❓', 'ask', SAFF], ['निरीक्षण करणे', '🔍', 'observe', LIVE], ['उत्तर शोधणे', '💡', 'answer', PLUM]];
+    steps.forEach(([s, ic, mark, color], i) => {
+      const x = 260 + i * 360;
+      const g = G(p, { x, y: 400, o: 0, s: .7 });
+      mk('circle', { r: 80, fill: '#fff', stroke: color, 'stroke-width': 5 }, g);
+      T(g, ic, { y: 16, size: 56, anchor: 'middle' });
+      T(g, s, { y: 130, size: 30, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+      pop(g, m(mark));
+      if (i) { const a = path(p, `M${x - 250} 400H${x - 100}`, { stroke: COL.faint, 'stroke-width': 5 }, { d: 0 }); draw(a, m(mark, -.3), .4); }
+    });
+    const ex = (str, tag, x, t0, color) => {
+      const g = kcard(p, x - 300, 620, 600, 180, color, { o: 0 }); tw(g, { o: 1 }, t0, .5);
+      T(g, str, { x: 320, y: 80, size: 32, weight: 700, anchor: 'middle' });
+      T(g, tag, { x: 320, y: 135, size: 26, fill: color, weight: 800, anchor: 'middle' });
+    };
+    ex('“झाड हिरवं आहे.”', 'साधं निरीक्षण', 440, m('simple'), COL.dim);
+    ex('“पानांचा रंग हिरवा का असतो?”', 'वैज्ञानिक प्रश्न ✓', 1160, m('sci'), LIVE);
+  }],
+
+  ['q3', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-sci', prompt: ['यातला वैज्ञानिक प्रश्न कोणता?'],
+    build: choice([
+      ['कुत्रा श्वास का घेतो?'],
+      ['कुत्रा तपकिरी आहे.'],
+      ['माझ्या घरी एक कुत्रा आहे.'],
+    ], 0, 'बरोबर! “का?” विचारलं की निरीक्षणाचा प्रश्न होतो, आणि तिथून विज्ञान सुरू होतं.', [
+      null,
+      'हे फक्त एक साधं निरीक्षण आहे. “का?” विचारलं तर तो प्रश्न होईल.',
+      'ही माहिती आहे, प्रश्न नाही.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['night', 'रात्री शेतात', (m) => {
+    const p = panel(0);
+    const sky = mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: COL.night }, p); put(sky, { o: 0 }); show(sky, 0, .8);
+    mk('path', { d: 'M0 660q500-60 1000-20t600 10V900H0z', fill: '#24344f' }, p);
+    for (let i = 0; i < 40; i++) { const st = mk('circle', { cx: Math.random() * 1600, cy: Math.random() * 500, r: Math.random() * 2 + 1, fill: '#fff', opacity: .7 }, p); }
+    const moon = mk('circle', { cx: 1300, cy: 160, r: 60, fill: '#fde68a' }, p); put(moon, { o: 0, s: .5 }); pop(moon, m('moon'));
+    text(p, 'एक वेगळी कल्पना करा…', 800, 110, .3, { size: 40, fill: '#fff', weight: 700, anchor: 'middle', font: SCRIPT });
+    const s = stone(p, 560, 660, 1.4); show(s, m('still'), .5); label(p, 'दगड', 560, 720, m('still', .3), COL.stone2);
+    const t = tree(p, 860, 660, .45); show(t, m('still'), .5); label(p, 'छोटं रोप', 860, 720, m('still', .3), COL.leaf2);
+    const both = text(p, 'दोन्ही शांत दिसत आहेत…', 800, 790, m('still', 1.2), { size: 30, fill: '#cbd5e1', anchor: 'middle' });
+    // zoom panel: inside the sapling
+    const z = kcard(p, 980, 330, 540, 420, LIVE, { o: 0, fill: 'rgba(255,255,255,.96)' }); tw(z, { o: 1 }, m('roots', -.3), .6);
+    T(z, 'रोपाच्या आत…', { x: 270, y: 50, size: 30, fill: LIVE, weight: 800, anchor: 'middle', font: HEAD });
+    const tt = tree(z, 270, 330, .7); put(tt, { o: 1 });
+    // roots with water dots moving up
+    const roots = G(z, { o: 0 }); mk('path', { d: 'M270 330q-40 30-70 60M270 330q40 30 70 60M270 330v70', stroke: BARK, 'stroke-width': 4, fill: 'none', 'stroke-linecap': 'round' }, roots);
+    show(roots, m('roots'), .4);
+    for (let i = 0; i < 4; i++) { const w = mk('circle', { r: 6, fill: SKY }, z); put(w, { x: 270, y: 390, o: 0 }); tw(w, { o: 1 }, m('roots', .4 + i * .5), .2); tw(w, { y: 220 }, m('roots', .4 + i * .5), 1.4, lin); tw(w, { o: 0 }, m('roots', 1.6 + i * .5), .3); }
+    const rl = T(z, 'मुळं: पाणी ↑', { x: 40, y: 345, size: 22, fill: SKY, weight: 700, o: 0 }); show(rl, m('roots', .5));
+    const ll = T(z, 'पानं: CO₂ + सूर्यप्रकाश → अन्न', { x: 270, y: 92, size: 22, fill: SAFF, weight: 700, anchor: 'middle', o: 0 }); show(ll, m('leaves', .3));
+    for (let i = 0; i < 5; i++) { const a = mk('path', { d: 'M0 0l-10 14M0 0l10 14', stroke: SAFF, 'stroke-width': 3, fill: 'none' }, z); put(a, { x: 150 + i * 60, y: 140, o: 0 }); tw(a, { o: 1 }, m('leaves', .2 + i * .15), .2); tw(a, { y: 170 }, m('leaves', .2 + i * .15), .8); tw(a, { o: 0 }, m('leaves', 1 + i * .15), .3); }
+    const dots = G(z, { o: 0 }); for (let i = 0; i < 40; i++) { const d = mk('circle', { r: 3, fill: i % 2 ? LIVE : SAFF }, dots); const ang = Math.random() * 6.28, rr = 20 + Math.random() * 60; put(d, { x: 270 + Math.cos(ang) * rr, y: 200 + Math.sin(ang) * rr * .8 }); }
+    show(dots, m('inside'), .5); prog(q => { [...dots.children].forEach((d, i) => put(d, { x: st(d).x + Math.sin(q * 20 + i) * .8, y: st(d).y + Math.cos(q * 17 + i) * .8 })); }, m('inside'), 4, lin);
+    const il = T(z, 'हजारो-लाखो छोट्या क्रिया', { x: 330, y: 405, size: 22, fill: COL.chalk, weight: 700, anchor: 'middle', o: 0 }); show(il, m('inside', .4));
+    const quote = G(p, { x: 500, y: 460, o: 0, s: .8 });
+    mk('rect', { x: -400, y: -60, width: 800, height: 110, rx: 30, fill: '#fff', stroke: SAFF, 'stroke-width': 3 }, quote);
+    T(quote, 'जीवन शांत असू शकतं,', { y: -12, size: 36, fill: COL.chalk, weight: 800, anchor: 'middle', font: HEAD });
+    T(quote, 'पण थांबलेलं नसतं.', { y: 32, size: 36, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD });
+    pop(quote, m('quote'));
+  }],
+
+  ['big', 'सर्वात मोठा प्रश्न', (m) => {
+    const p = panel(0);
+    title(p, 'आणि मग आला सर्वात मोठा प्रश्न…', .1, 100);
+    ground(p, 760, .1);
+    const b = boy(p, 330, 760, 1.1); show(b, .3, .5);
+    const lf = mk('ellipse', { cx: 395, cy: 650, rx: 26, ry: 14, fill: COL.leaf, stroke: LIVE, 'stroke-width': 2, transform: 'rotate(-30 395 650)' }, p); put(lf, { o: 0 }); show(lf, m('leaf'), .4);
+    bubble(p, 'हे सगळं चालतं तरी कसं?', 520, 420, m('leaf', 1.2), { w: 520, color: SAFF, size: 32 });
+    const qs = ['झाड वाढतं कसं?', 'माणूस वाढतो कसा?', 'जखम भरते कशी?', 'अन्नापासून ऊर्जा कशी?', 'बीजातून झाड कसं?'];
+    qs.forEach((q, i) => { const t = text(p, q, 1000, 230 + i * 56, m('qs', i * .9), { size: 28, fill: i % 2 ? SKY : LIVE, weight: 700 }); });
+    // deeper: a spiral/arrow going into the leaf, then a microscope, then a cell
+    const arrow = path(p, 'M1000 560q-60 60-120 40t-80-90', { stroke: PLUM, 'stroke-width': 6 }, { d: 0 }); draw(arrow, m('deeper'), 1.2);
+    note(p, 'खूप आत… इतकं आत…', 980, 720, m('deeper', .8), PLUM, 34);
+    const mic = G(p, { x: 1230, y: 760, o: 0, s: .7 });
+    mk('rect', { x: -70, y: -14, width: 140, height: 14, rx: 6, fill: COL.chalk }, mic);
+    mk('path', { d: 'M-30 -14q-10-80 30-120l20 20q-36 40-20 100z', fill: '#4b5563' }, mic);
+    mk('rect', { x: 0, y: -170, width: 40, height: 70, rx: 8, fill: PLUM, transform: 'rotate(40 20 -135)' }, mic);
+    mk('circle', { cx: -20, cy: -60, r: 10, fill: '#fff', stroke: COL.chalk, 'stroke-width': 3 }, mic);
+    pop(mic, m('micro'));
+    label(p, 'Microscope — सूक्ष्मदर्शक', 1230, 810, m('micro', .5), PLUM, 26);
+    const cell = G(p, { x: 1430, y: 560, o: 0, s: .5 });
+    mk('ellipse', { rx: 90, ry: 70, fill: '#ecfdf5', stroke: LIVE, 'stroke-width': 4 }, cell);
+    mk('circle', { r: 26, fill: '#bbf7d0', stroke: LIVE, 'stroke-width': 3 }, cell);
+    for (let i = 0; i < 6; i++) mk('circle', { cx: Math.cos(i) * 55, cy: Math.sin(i * 1.3) * 40, r: 6, fill: SAFF }, cell);
+    pop(cell, m('cell'));
+    label(p, 'Cell — पेशी', 1430, 670, m('cell', .5), LIVE, 26);
+  }],
+
+  ['english', 'आजची इंग्रजी', (m) => {
+    const p = panel(0);
+    title(p, 'आजची इंग्रजी', .1);
+    text(p, 'घोकायची नाहीत. मोठ्याने बोलायची.', 800, 190, .5, { size: 30, fill: COL.dim, anchor: 'middle' });
+    const row = (en, mr, y, mark, drawer) => {
+      const g = kcard(p, 200, y, 1200, 150, PLUM, { o: 0 }); tw(g, { o: 1 }, m(mark), .5);
+      T(g, en, { x: 60, y: 66, size: 44, fill: PLUM, weight: 800, font: HEAD });
+      T(g, mr, { x: 60, y: 116, size: 28, fill: COL.chalk, weight: 600 });
+      const d = drawer(g); if (d) { show(d, m(mark, .3), .4); }
+    };
+    row('This is a plant.', 'ही एक वनस्पती आहे.', 250, 'e1', g => tree(g, 1080, 135, .55));
+    row('This is a dog.', 'हा एक कुत्रा आहे.', 430, 'e2', g => dog(g, 1060, 135, .9));
+    row('I am a living being.', 'मी एक सजीव आहे.', 610, 'e3', g => boy(g, 1080, 140, .6));
+    note(p, 'स्वतःकडे पाहा, आणि मोठ्याने बोला!', 800, 830, m('e3', 1.2), SAFF, 34);
+  }],
+
+  ['wrap', 'आज आपण काय शिकलो?', (m) => {
+    const p = panel(0);
+    title(p, 'आज आपण काय शिकलो?', .1);
+    [['जिवंत गोष्टी वाढतात, अन्न खातात, श्वास घेतात.', 'w1', LIVE],
+     ['हालचाल म्हणजेच जीवन नाही.', 'w2', COL.bad],
+     ['विज्ञान = पाहणं · प्रश्न · निरीक्षण · उत्तर', 'w3', SKY],
+     ['जीवन शांत असू शकतं, पण थांबलेलं नसतं.', 'w4', SAFF]].forEach(([str, mark, color], i) => {
+      const g = G(p, { x: -16, y: 250 + i * 120, o: 0 });
+      mk('circle', { cx: 280, cy: -12, r: 28, fill: color }, g);
+      T(g, String(i + 1), { x: 280, y: -1, size: 28, fill: '#fff', weight: 800, anchor: 'middle' });
+      T(g, str, { x: 334, size: 34, weight: 700 });
+      tw(g, { o: 1, x: 0 }, m(mark), .6);
+    });
+  }],
+
+  ['final1', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-ld2', prompt: ['प्रत्येक गोष्ट जिवंत आहे की निर्जीव?'],
+    build: grid([
+      { parts: ['पंखा'], ans: ['d'], why: 'फिरतो, पण वाढत नाही, खात नाही, श्वास घेत नाही.' },
+      { parts: ['फुलपाखरू'], ans: ['l'], why: 'उडतं, खातं, अंड्यातून जन्माला येतं.' },
+      { parts: ['गवत'], ans: ['l'], why: 'गवत वाढतं. वनस्पती जिवंत असतात.' },
+      { parts: ['नदीचं पाणी'], ans: ['d'], why: 'वाहतं, पण वाढत नाही, खात नाही. हालचाल म्हणजेच जीवन नाही.' },
+      { parts: ['बीज (बी)'], ans: ['l'], why: 'बीजातून रोप येतं. ते जिवंत आहे, फक्त शांत आहे.' },
+      { parts: ['मोबाईल'], ans: ['d'], why: 'बोलतो, वाजतो, पण जिवंत नाही.' },
+    ], LD, { multi: false, text: true }),
+  }], done, 'धड्याचा सराव   १ पैकी २') }],
+
+  ['final2', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-stone', prompt: ['दगड निर्जीव का आहे?'],
+    build: choice([
+      ['तो वाढत नाही, अन्न खात नाही, श्वास घेत नाही.'],
+      ['तो हालचाल करत नाही.'],
+      ['तो राखाडी रंगाचा आहे.'],
+      ['तो जड आहे.'],
+    ], 0, 'बरोबर! जीवनाची लक्षणं: वाढ, अन्न, श्वास. दगडात यातलं काहीच नाही.', [
+      null,
+      'हालचाल हे लक्षण नाही. झाडही हलत नाही, तरी जिवंत आहे; गाडी हलते, तरी निर्जीव आहे.',
+      'रंगाचा जिवंतपणाशी संबंध नाही. हिरवं पान आणि राखाडी हत्ती, दोन्ही जिवंत.',
+      'वजनाचा संबंध नाही. हत्ती जड आहे आणि जिवंत आहे.',
+    ]),
+  }], done, 'धड्याचा सराव   २ पैकी २') }],
+
+  ['finish', 'पूर्ण', () => { panel(0); }, { ask: finishCard }],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

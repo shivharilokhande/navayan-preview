@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>४ · Why Do We Need Numbers?</title>
+<link rel="stylesheet" href="../lib/engine.css">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js"></script>
+<script src="audio/mr/timings.js"></script>
+<script>
+'use strict';
+const CHAPTER = { number: 4, title: 'Why Do We Need Numbers?', minutes: 11, language: 'mr' };
+
+/* ---------- palette roles ---------- */
+const SAFF = COL.int, GREY = COL.stone, SKY = COL.whole, PLUM = COL.irr, LEAF = COL.leaf, BARK = COL.bark, CORAL = '#e0524d';
+
+/* ---------- text helpers (as in ch01) ---------- */
+const text = (p, str, x, y, t0, { size = 32, fill = COL.chalk, anchor = 'start', weight = 500, font = UI } = {}) => {
+  const e = T(p, str, { x, y, size, fill, anchor, weight, font, o: 0 }); show(e, t0); return e;
+};
+const title = (p, str, t0 = .1, y = 110) => text(p, str, 800, y, t0, { size: 50, weight: 800, anchor: 'middle', font: HEAD });
+const note = (p, str, x, y, t0, fill = SAFF, size = 36, r = -3) => {
+  const g = G(p, { x, y, o: 0, r }); T(g, str, { size, fill, font: SCRIPT, weight: 700, anchor: 'middle' }); show(g, t0); return g;
+};
+function label(p, str, x, y, t0, color = COL.chalk, size = 26) { return text(p, str, x, y, t0, { size, fill: color, anchor: 'middle', weight: 700 }); }
+function bubble(p, str, x, y, t0, { w = 420, color = SAFF, size = 30 } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  mk('path', { d: `M${-w / 2} -40h${w}a16 16 0 0 1 16 16v56a16 16 0 0 1-16 16h${-w / 2 + 40}l-24 26v-26h${-w / 2 + 8}a16 16 0 0 1-16-16v-56a16 16 0 0 1 16-16z`, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 12, size, fill: COL.chalk, weight: 600, anchor: 'middle' });
+  pop(g, t0); return g;
+}
+function kcard(p, x, y, w, h, color, { o = 0, s = 1, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o, s });
+  mk('rect', { x: 0, y: 0, width: w, height: h, rx: 22, fill, stroke: COL.edge || '#f1e4d0', 'stroke-width': 2 }, g);
+  mk('path', { d: `M22 0h-4a18 18 0 0 0-18 18v${h - 36}a18 18 0 0 0 18 18h4z`, fill: color }, g);
+  return g;
+}
+// pill banner centred on (x,y)
+function banner(p, str, x, y, t0, { w = 900, color = SAFF, size = 36, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o: 0, s: .8 });
+  mk('rect', { x: -w / 2, y: -44, width: w, height: 88, rx: 44, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 13, size, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  pop(g, t0); return g;
+}
+// number chip (saffron by default); nChip avoids the engine's chip()
+function nChip(p, str, x, y, { color = SAFF, size = 40, w = 0, fill = '#fff', textFill, font = HEAD } = {}) {
+  const ww = w || Math.max(72, uiW(str, size) + 40);
+  const g = G(p, { x, y, o: 0, s: .6 });
+  mk('rect', { x: -ww / 2, y: -36, width: ww, height: 72, rx: 36, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 14, size, fill: textFill || color, weight: 800, anchor: 'middle', font });
+  g._w = ww; return g;
+}
+
+/* ---------- drawn things, each around (0,0) on its baseline ---------- */
+function tree(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-14 0V-90q0-14 14-14q14 0 14 14V0z', fill: BARK }, g);
+  mk('circle', { cx: 0, cy: -150, r: 70, fill: COL.leaf2 }, g);
+  mk('circle', { cx: -52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 0, cy: -110, r: 50, fill: COL.leaf2 }, g);
+  return g;
+}
+function boy(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -22, y: -120, width: 44, height: 70, rx: 14, fill: SKY }, g);
+  mk('rect', { x: -20, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g); mk('rect', { x: 3, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g);
+  mk('circle', { cx: 0, cy: -146, r: 30, fill: '#f1c7a0' }, g);
+  mk('path', { d: 'M-30 -152q4-30 30-30q26 0 30 30q-18-10-30-6q-12-4-30 6z', fill: '#2b2a33' }, g);
+  mk('circle', { cx: -10, cy: -148, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 10, cy: -148, r: 3.5, fill: COL.chalk }, g);
+  mk('path', { d: 'M-9 -134q9 8 18 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('path', { d: 'M-22 -108l-18 30M22 -108l18 30', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+  return g;
+}
+// a grown-up: mother (sari, rose) or shopkeeper (kurta, grey) — colour picks the look
+function nPerson(p, x, y, s = 1, color = '#f472b6', hair = 'long') {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-30 0V-110q0-30 30-30q30 0 30 30V0z', fill: color }, g);
+  mk('circle', { cx: 0, cy: -170, r: 32, fill: '#f1c7a0' }, g);
+  mk('path', { d: hair === 'long' ? 'M-32 -176q4-34 32-34q28 0 32 34q-10-14-32-10q-22-4-32 10zM-32 -176v40q-10-10-6-40zM32 -176v40q10-10 6-40z' : 'M-32 -176q6-32 32-32q26 0 32 32q-16-12-32-8q-16-4-32 8z', fill: '#2b2a33' }, g);
+  mk('circle', { cx: -11, cy: -172, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 11, cy: -172, r: 3.5, fill: COL.chalk }, g);
+  mk('path', { d: 'M-10 -158q10 8 20 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('path', { d: 'M-30 -120l-20 40M30 -120l20 40', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+  return g;
+}
+function nApple(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M0 -8q-14-18-30-6q-16 14-6 36q10 20 28 20q6 0 8-2q2 2 8 2q18 0 28-20q10-22-6-36q-16-12-30 6z', fill: '#ef4444' }, g);
+  mk('path', { d: 'M0 -10v-16', stroke: BARK, 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+  mk('path', { d: 'M2 -22q14-14 24-4q-14 10-24 4z', fill: LEAF }, g);
+  return g;
+}
+function nMango(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-4 -30q22-4 30 18q6 24-14 34q-24 8-36-10q-10-22 20-42z', fill: '#fbbf24', stroke: '#d97706', 'stroke-width': 2 }, g);
+  mk('path', { d: 'M-4 -30q10 2 6 12', stroke: LEAF, 'stroke-width': 4, 'stroke-linecap': 'round', fill: 'none' }, g);
+  return g;
+}
+// rupee note, centred, w×h
+function nNote(p, v, x, y, s = 1) {
+  const col = { 10: '#b45309', 20: '#15803d', 50: '#0891b2', 100: '#7c3aed', 500: '#9ca3af' }[v] || SAFF;
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -100, y: -44, width: 200, height: 88, rx: 10, fill: '#fff', stroke: col, 'stroke-width': 4 }, g);
+  mk('rect', { x: -88, y: -32, width: 176, height: 64, rx: 6, fill: 'none', stroke: col, 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, g);
+  mk('circle', { cx: -56, cy: 0, r: 20, fill: 'none', stroke: col, 'stroke-width': 2 }, g);
+  T(g, '₹' + v, { x: 24, y: 14, size: 40, fill: col, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+function nBag(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-40 0V-70q0-16 16-16h48q16 0 16 16V0z', fill: '#d6b48c', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-16 -86q0-26 16-26q16 0 16 26', stroke: BARK, 'stroke-width': 4, fill: 'none' }, g);
+  for (const [cx, cy] of [[-18, -40], [6, -28], [20, -52], [-8, -16]]) mk('circle', { cx, cy, r: 9, fill: '#c9a26b', stroke: BARK, 'stroke-width': 1.5 }, g);
+  return g;
+}
+function nHouse(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -130, y: -140, width: 260, height: 140, rx: 8, fill: '#fde68a', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-150 -140L0 -240L150 -140z', fill: '#c2410c' }, g);
+  mk('rect', { x: -30, y: -80, width: 60, height: 80, rx: 6, fill: BARK }, g);
+  mk('rect', { x: 50, y: -110, width: 60, height: 50, rx: 4, fill: COL.sky, stroke: BARK, 'stroke-width': 2 }, g);
+  return g;
+}
+const ground = (p, y = 700, t0 = .1) => { const l = path(p, `M80 ${y}H1520`, { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(l, t0, 1); return l; };
+
+/* ---------- a number line drawn inside the panel (the engine's lives in S.line and would outlive the beat) ---------- */
+function nLine(p, x0, y, u, lo, hi, tLine, tTicks, { color = COL.chalk, step = .18 } = {}) {
+  const g = G(p, {});
+  const xv = v => x0 + (v - lo) * u;
+  const a = xv(lo) - 60, b = xv(hi) + 60;
+  draw(path(g, `M${a} ${y}H${b}`, { stroke: color, 'stroke-width': 4 }, { d: 0 }), tLine, .9);
+  show(path(g, `M${b - 16} ${y - 11}L${b} ${y}L${b - 16} ${y + 11}`, { stroke: color, 'stroke-width': 4 }, { o: 0 }), tLine + .8, .3);
+  show(path(g, `M${a + 16} ${y - 11}L${a} ${y}L${a + 16} ${y + 11}`, { stroke: color, 'stroke-width': 4 }, { o: 0 }), tLine + .8, .3);
+  g._ticks = {};
+  for (let v = lo; v <= hi; v++) {
+    const t = G(g, { o: 0, y: 8 });
+    mk('path', { d: `M${xv(v)} ${y - 12}V${y + 12}`, stroke: COL.dim, 'stroke-width': 3 }, t);
+    T(t, String(v), { x: xv(v), y: y + 52, size: 32, fill: COL.chalk, weight: 700, anchor: 'middle', font: HEAD });
+    tw(t, { o: 1, y: 0 }, tTicks + (v - lo) * step, .4, out);
+    g._ticks[v] = t;
+  }
+  g._x = xv; g._y = y;
+  return g;
+}
+function nDot(p, x, y, color = SAFF, r = 14) {
+  const g = G(p, { x, y, s: 0, o: 0 });
+  mk('circle', { r, fill: color, stroke: '#fff', 'stroke-width': 3 }, g);
+  return g;
+}
+// hop an element from its current x to x2 in an arc (height hgt), landing at t0 + dur
+function hop(e, x2, t0, dur = .5, hgt = 60, y2 = null) {
+  let x1 = null, y1 = null;
+  prog(q => { if (x1 === null) { x1 = st(e).x; y1 = st(e).y; } const yy = y2 === null ? y1 : y1 + (y2 - y1) * q; put(e, { x: x1 + (x2 - x1) * q, y: yy - Math.sin(Math.PI * q) * hgt }); }, t0, dur, io);
+}
+// a horizontal arrow from x1 to x2 at y, drawn on
+function nArrow(p, x1, x2, y, color, t0, dur = .6) {
+  const d = Math.sign(x2 - x1);
+  draw(path(p, `M${x1} ${y}H${x2}`, { stroke: color, 'stroke-width': 6, 'stroke-linecap': 'round' }, { d: 0 }), t0, dur);
+  show(path(p, `M${x2 - 18 * d} ${y - 13}L${x2} ${y}L${x2 - 18 * d} ${y + 13}`, { stroke: color, 'stroke-width': 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, { o: 0 }), t0 + dur - .1, .2);
+}
+// pointing hand (emoji), centred
+function nHand(p, x, y) { const g = G(p, { x, y, o: 0 }); T(g, '👆', { y: 20, size: 54, anchor: 'middle' }); return g; }
+// a field: light green rect with n small trees in rows of 4
+function nField(p, x, y, w, h, n, color = LEAF) {
+  const g = G(p, { x, y, o: 0 });
+  mk('rect', { x: 0, y: 0, width: w, height: h, rx: 24, fill: '#ecfccb', stroke: color, 'stroke-width': 4 }, g);
+  for (let i = 0; i < n; i++) { const t = tree(g, 90 + (i % 4) * (w - 180) / 3, 150 + Math.floor(i / 4) * 115, .42); put(t, { o: 1 }); }
+  return g;
+}
+/* ---------- measurement objects ---------- */
+function nTable(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -120, y: -60, width: 240, height: 16, rx: 4, fill: '#d9a066', stroke: BARK, 'stroke-width': 2 }, g);
+  mk('rect', { x: -108, y: -44, width: 14, height: 44, fill: BARK }, g); mk('rect', { x: 94, y: -44, width: 14, height: 44, fill: BARK }, g);
+  mk('rect', { x: -120, y: -84, width: 240, height: 14, fill: '#fde68a', stroke: BARK, 'stroke-width': 1.5 }, g);
+  for (let i = 0; i <= 12; i++) mk('path', { d: `M${-120 + i * 20} -84v${i % 2 ? 5 : 9}`, stroke: BARK, 'stroke-width': 1.5 }, g);
+  return g;
+}
+function nBottle(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-30 0V-90q0-20 14-30V-140h32V-120q14 10 14 30V0z', fill: '#e0f2fe', stroke: SKY, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  mk('path', { d: 'M-27 -3V-70h54V-3z', fill: '#7dd3fc' }, g);
+  mk('rect', { x: -18, y: -150, width: 36, height: 14, rx: 3, fill: SKY }, g);
+  return g;
+}
+function nScale(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -90, y: -24, width: 180, height: 24, rx: 8, fill: '#e5e7eb', stroke: GREY, 'stroke-width': 3 }, g);
+  mk('rect', { x: -40, y: -56, width: 80, height: 32, rx: 6, fill: '#fff', stroke: GREY, 'stroke-width': 3 }, g);
+  const b = boy(g, 0, -56, .6); put(b, { o: 1 });
+  return g;
+}
+function nClock(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('circle', { r: 70, fill: '#fff', stroke: COL.chalk, 'stroke-width': 5 }, g);
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; mk('circle', { cx: Math.sin(a) * 58, cy: -Math.cos(a) * 58, r: i % 3 ? 2.5 : 4.5, fill: COL.chalk }, g); }
+  mk('path', { d: 'M0 0L-26 -30', stroke: COL.chalk, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);  // hour hand ≈ 10:30
+  mk('path', { d: 'M0 0V46', stroke: SAFF, 'stroke-width': 5, 'stroke-linecap': 'round' }, g);         // minute hand at 6
+  mk('circle', { r: 5, fill: SAFF }, g);
+  return g;
+}
+
+/* ---------- beats ---------- */
+const BEATS = [
+  ['intro', 'Why Do We Need Numbers?', (m, D) => {
+    const bg = G(scene, { o: 0 });
+    mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: '#fff3df' }, bg);
+    for (let i = 0; i < 18; i++) { const d = String((i * 7) % 10); T(bg, d, { x: 90 + (i * 263) % 1450, y: 120 + (i * 171) % 720, size: 60 + (i * 13) % 50, fill: SAFF, weight: 800, font: HEAD, o: .12 }); }
+    tw(bg, { o: 1 }, 0, .8);
+    const g = G(scene, { o: 0, y: 24 });
+    T(g, 'नवयान · दिवस २ · धडा ४ · Maths', { x: 800, y: 210, size: 26, fill: SAFF, weight: 700, anchor: 'middle' });
+    T(g, 'Why Do We Need', { x: 800, y: 310, size: 78, weight: 800, anchor: 'middle', font: HEAD });
+    T(g, 'Numbers?', { x: 800, y: 405, size: 78, weight: 800, anchor: 'middle', font: HEAD, fill: SAFF });
+    T(g, 'संख्या — आपल्या जगाची भाषा', { x: 800, y: 470, size: 38, fill: COL.dim, weight: 700, anchor: 'middle', font: HEAD });
+    tw(g, { o: 1, y: 0 }, .3, 1.1, out);
+    // Day 2 strip: three lessons, Maths lit
+    const strip = G(scene, { o: 0 });
+    T(strip, 'दिवस २ · संख्या आणि स्वतःची ओळख', { x: 800, y: 580, size: 26, fill: COL.dim, weight: 700, anchor: 'middle' });
+    [['Maths', 'आपण जग मोजतो', SAFF, true], ['Social Science', 'आपण समाज समजतो', SKY, false], ['Life Skills', 'स्वतःला समजायला सुरुवात', CORAL, false]].forEach(([en, mr, c, lit], i) => {
+      const x = 380 + i * 420, cg = G(strip, { x, y: 650, o: 0, s: .8 });
+      mk('rect', { x: -170, y: -36, width: 340, height: 72, rx: 36, fill: lit ? c : '#fff', stroke: c, 'stroke-width': 3 }, cg);
+      T(cg, en, { y: 12, size: 32, fill: lit ? '#fff' : c, weight: 800, anchor: 'middle', font: HEAD });
+      T(cg, mr, { y: 80, size: 24, fill: COL.dim, weight: 600, anchor: 'middle' });
+      pop(cg, m('day', .4 + i * 1.3));
+      if (i) nArrow(strip, x - 240, x - 185, 650, COL.faint, m('day', i * 1.3), .4);
+    });
+    show(strip, m('day'));
+    const r = note(scene, 'आपल्याला Numbers ची गरज का पडली?', 800, 820, m('sub', 2.6), SAFF, 40);
+    tw(g, { o: 0, y: -24 }, D - .9, .8); hide(r, D - .9, .8); hide(strip, D - .9, .8); hide(bg, D - .9, .8);
+  }],
+
+  ['market', 'बाजारात', (m) => {
+    const p = panel(0);
+    title(p, 'कल्पना करा… तुम्ही बाजारात गेलात', .1, 90);
+    ground(p, 700, .1);
+    // shop counter at right
+    const shop = G(p, { o: 0 });
+    mk('rect', { x: 980, y: 590, width: 360, height: 110, rx: 10, fill: '#d6b48c', stroke: BARK, 'stroke-width': 3 }, shop);
+    mk('rect', { x: 980, y: 580, width: 360, height: 18, rx: 6, fill: BARK }, shop);
+    T(shop, 'भाजी', { x: 1160, y: 660, size: 30, fill: '#fff', weight: 800, anchor: 'middle', font: HEAD });
+    const keeper = nPerson(shop, 1160, 580, .85, '#9ca3af', 'short'); put(keeper, { o: 1 });
+    const bag = nBag(shop, 1060, 580, 1); put(bag, { o: 1 });
+    show(shop, m('go'), .5);
+    const b = boy(p, 300, 700, 1); show(b, m('go'), .4); tw(b, { x: 760 }, m('go', .3), 1.8, io);
+    const mom = nPerson(p, 240, 700, .9, '#f472b6', 'long'); show(mom, m('aai'), .4);
+    const b1 = bubble(p, 'बटाटे दोन किलो घे.', 330, 440, m('aai', .3), { w: 400, color: '#f472b6' }); hide(b1, m('shop'), .4);
+    const tag = nChip(p, '2 kg', 1060, 425, { size: 34 }); pop(tag, m('aai', 1.2));
+    const b2 = bubble(p, '₹80 झाले.', 1160, 330, m('shop', .3), { w: 280, color: GREY }); hide(b2, m('home'), .4);
+    const n80 = nNote(p, 80, 760, 560, .7); show(n80, m('pay'), .3); tw(n80, { x: 1160, y: 540 }, m('pay', .3), 1, io); hide(n80, m('back'), .3);
+    const n20 = nNote(p, 20, 1160, 540, .7); show(n20, m('back'), .3); tw(n20, { x: 760, y: 560 }, m('back', .3), 1, io);
+    const bag2 = nBag(p, 820, 700, .8); show(bag2, m('back', 1.2), .3);
+    tw(b, { x: 480 }, m('home'), 1.6, io); tw(n20, { x: 480, y: 560 }, m('home'), 1.6, io); tw(bag2, { x: 540 }, m('home'), 1.6, io); hide(tag, m('home'), .3);
+    const b3 = bubble(p, 'किती बटाटे आणलेस?', 300, 440, m('home', 1.9), { w: 400, color: '#f472b6' });
+    const b4 = bubble(p, 'दोन किलो.', 640, 430, m('home', 3.6), { w: 240, color: SKY });
+    // the three numbers
+    const row = G(p, { o: 0 }); show(row, m('count'));
+    ['2 kg', '₹80', '₹20'].forEach((s, i) => { const c = nChip(row, s, 560 + i * 240, 200, { size: 40, w: 180 }); pop(c, m('count', 1.6 + i * 1)); if (i) nArrow(row, 560 + i * 240 - 140, 560 + i * 240 - 100, 200, COL.faint, m('count', 1.4 + i * 1), .3); });
+    hide(b3, m('without'), .4); hide(b4, m('without'), .4);
+    banner(p, 'Numbers नसते तर? किती घ्यायचे? किती द्यायचे? किती उरले?', 800, 810, m('without', .3), { w: 1100, color: CORAL, size: 32 });
+  }],
+
+  ['what', 'Number म्हणजे काय?', (m) => {
+    const p = panel(0);
+    title(p, 'Number म्हणजे काय?', .1);
+    banner(p, 'Number म्हणजे संख्या. ती सांगते: किती?', 800, 200, m('def', .3), { w: 820, size: 34 });
+    const row = (n, mr, en, y, mark) => {
+      const c = nChip(p, String(n), 330, y, { size: 44, w: 80 }); pop(c, m(mark));
+      for (let i = 0; i < n; i++) { const a = nApple(p, 460 + i * 80, y, .9); pop(a, m(mark, .15 + i * .2)); }
+      label(p, mr, 900, y + 12, m(mark, .5), COL.chalk, 34);
+      label(p, en, 1240, y + 12, m('say', .9 + (n - 1) * .7), PLUM, 40);
+    };
+    row(1, 'एक सफरचंद', 'One', 330, 'one');
+    row(2, 'दोन सफरचंद', 'Two', 450, 'two');
+    row(3, 'तीन सफरचंद', 'Three', 570, 'three');
+    label(p, 'आपण वस्तू मोजतो… आणि त्यांची संख्या सांगतो.', 800, 690, m('say', .2), COL.dim, 28);
+    note(p, 'यातूनच Numbers चा प्रवास सुरू होतो.', 800, 800, m('journey', .2), SAFF, 38);
+  }],
+
+  ['everywhere', 'Numbers फक्त Maths च्या पुस्तकात नसतात', (m) => {
+    const p = panel(0);
+    title(p, 'Numbers फक्त Maths च्या पुस्तकात नसतात', .1, 95);
+    const items = [['🏠', 'घराचा नंबर', '12'], ['🚌', 'बस नंबर', '47'], ['📱', 'मोबाईल नंबर', '98765 43210'], ['📅', 'तारीख', '13 Oct'], ['⏰', 'वेळ', '10:30'], ['🏷️', 'किंमत', '₹80'], ['📏', 'उंची', '140 cm'], ['⚖️', 'वजन', '40 kg'], ['👨‍👩‍👧', 'कुटुंबातील सदस्य', '5']];
+    items.forEach(([ic, mr, val], i) => {
+      const c = i % 3, r = Math.floor(i / 3), x = 150 + c * 450, y = 150 + r * 190;
+      const g = kcard(p, x, y, 400, 160, SAFF, { o: 0, s: .9 }); tw(g, { o: 1, s: 1 }, m('c' + (i + 1)), .4, back);
+      T(g, ic, { x: 70, y: 100, size: 56, anchor: 'middle' });
+      T(g, mr, { x: 130, y: 66, size: 26, fill: COL.dim, weight: 700 });
+      T(g, val, { x: 130, y: 122, size: val.length > 6 ? 34 : 44, fill: SAFF, weight: 800, font: HEAD });
+    });
+    banner(p, 'Numbers are everywhere.', 800, 790, m('all', .3), { w: 760, color: PLUM, size: 40 });
+    label(p, 'जग मोजायला · तुलना करायला · समजून घ्यायला', 800, 860, m('all', 2.2), COL.dim, 26);
+  }],
+
+  ['without', 'जर Numbers नसते तर?', (m) => {
+    const p = panel(0);
+    title(p, 'जर Numbers नसते तर?', .1);
+    const rows = [['👩‍🏫', 'शिक्षक', '“आज वर्गात खूप विद्यार्थी आहेत.”', '40 विद्यार्थी', 't1'], ['🧑‍💼', 'दुकानदार', '“ही वस्तू महाग आहे.”', '₹500', 't2'], ['🧒', 'तुम्ही', '“माझं घर शाळेपासून लांब आहे.”', '3 km', 't3']];
+    rows.forEach(([ic, who, say, eg, mark], i) => {
+      const y = 240 + i * 175;
+      const f = G(p, { x: 200, y, o: 0 }); T(f, ic, { y: 20, size: 60, anchor: 'middle' }); T(f, who, { y: 70, size: 24, fill: COL.dim, weight: 700, anchor: 'middle' }); show(f, m(mark), .3);
+      const bb = G(p, { x: 640, y, o: 0, s: .8 });
+      mk('rect', { x: -330, y: -42, width: 660, height: 84, rx: 20, fill: '#fff', stroke: COL.faint, 'stroke-width': 3 }, bb);
+      mk('path', { d: 'M-330 -10l-26 10 26 10z', fill: COL.faint }, bb);
+      T(bb, say, { y: 12, size: 30, weight: 600, anchor: 'middle' }); pop(bb, m(mark, .3));
+      nArrow(p, 1000, 1060, y, COL.faint, m(mark, 1.6), .3);
+      const q = G(p, { x: 1180, y, o: 0, s: .6 });
+      mk('circle', { r: 44, fill: '#eef0f3', stroke: GREY, 'stroke-width': 3 }, q); T(q, 'किती?', { y: 11, size: 28, fill: GREY, weight: 800, anchor: 'middle', font: HEAD });
+      pop(q, m(mark, 1.9));
+      const nk = label(p, 'माहित नाही', 1180, y + 78, m(mark, 2.6), GREY, 22);
+      // at `clear`: the grey question becomes a saffron number
+      hide(q, m('clear', .2 + i * .3), .3); hide(nk, m('clear', .2 + i * .3), .3);
+      const c = nChip(p, eg, 1300, y, { size: 34 }); pop(c, m('clear', .5 + i * .3));
+      const tagEg = text(p, 'उदा.', 1300 - c._w / 2 - 6, y - 40, m('clear', .6 + i * .3), { size: 18, fill: COL.dim, anchor: 'end' });
+    });
+    banner(p, 'Numbers अस्पष्ट गोष्टी स्पष्ट करून सांगतात.', 800, 800, m('clear', 1.4), { w: 1000, size: 34 });
+  }],
+
+  ['counting', 'Counting — मोजणी', (m) => {
+    const p = panel(0);
+    title(p, 'Counting — मोजणी', .1);
+    for (let i = 0; i < 5; i++) { const c = nChip(p, String(i + 1), 460 + i * 170, 220, { size: 44, w: 84 }); pop(c, m('seq', i * .45)); }
+    label(p, '…पण मोजणी म्हणजे फक्त numbers पाठ करणं नाही.', 800, 310, m('seq', 3.2), COL.dim, 26);
+    const tr = tree(p, 420, 820, 1.35); show(tr, m('tree'), .5);
+    const pos = [[-75, -205], [0, -250], [78, -205], [-40, -140], [52, -142]].map(([dx, dy]) => [420 + dx * 1.35, 820 + dy * 1.35]);
+    const mangoes = pos.map(([x, y]) => { const mg = nMango(p, x, y, 1); pop(mg, m('tree', .4)); return mg; });
+    S.mangoes = mangoes;
+    const hand = nHand(p, pos[0][0], pos[0][1] + 60); show(hand, m('n1', -.3), .3);
+    const words = ['One', 'Two', 'Three', 'Four', 'Five'];
+    words.forEach((w, i) => {
+      const t = m('n' + (i + 1));
+      if (i) hop(hand, pos[i][0], t - .35, .35, 30, pos[i][1] + 60);
+      pulse(mangoes[i], t, 1.4);
+      const bd = nChip(p, String(i + 1), pos[i][0] + 34, pos[i][1] - 34, { size: 24, w: 44, fill: SAFF, textFill: '#fff' }); pop(bd, t);
+      const rowY = 380 + i * 74;
+      const c = nChip(p, String(i + 1), 860, rowY, { size: 34, w: 72 }); pop(c, t + .1);
+      label(p, '—', 930, rowY + 10, t + .15, COL.faint, 30);
+      label(p, w, 1060, rowY + 12, t + .2, PLUM, 38);
+      label(p, i === 4 ? 'पाच आंबे' : '', 1250, rowY + 12, t + .5, COL.chalk, 30);
+    });
+    hide(hand, m('link'), .4);
+    banner(p, 'वस्तू ↔ संख्या  =  Counting', 1060, 810, m('link', .3), { w: 640, size: 36 });
+  }],
+
+  ['q1', 'छोटी तपासणी', () => {
+    const p = panel(0);
+    const tr = tree(p, 380, 800, 1.4); show(tr, .1, .4);
+    const pos = [[-80, -200], [-20, -255], [60, -230], [95, -165], [-50, -140], [20, -120], [-100, -120]];
+    pos.forEach(([dx, dy], i) => pop(nMango(p, 380 + dx * 1.4, 800 + dy * 1.4, 1), .3 + i * .08));
+  }, { ask: done => quiz({ x: 760, y: 230, w: 740, cls: 'side', maxH: 440 }, [{
+    id: 'c-count', prompt: ['झाडावर किती आंबे आहेत? प्रत्येक आंब्याकडे एकदा बोट दाखवा आणि मोजा.'],
+    build: blanks([{ parts: ['आंबे = ', { box: '7' }], why: 'बरोबर! सात आंबे. प्रत्येक आंब्याला एकदाच मोजलं, आणि शेवटचा number म्हणजे एकूण संख्या.', hint: 'प्रत्येक आंब्याकडे एकदाच बोट दाखवा: One, Two, Three… उत्तर इंग्रजी अंकांत (0–9) लिहा.' }]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['order', 'Numbers चा क्रम', (m) => {
+    const p = panel(0);
+    title(p, 'Numbers चा क्रम', .1);
+    label(p, 'Numbers एका ठराविक क्रमाने येतात.', 800, 190, .5, COL.dim, 28);
+    for (let i = 0; i < 6; i++) {
+      const x = 325 + i * 190, c = nChip(p, String(i + 1), x - 120, 330, { size: 46, w: 90 });
+      tw(c, { o: 1, s: 1, x }, m('seq', i * .4), .45, back);
+      if (i < 5) nArrow(p, x + 55, x + 130, 330, COL.faint, m('seq', i * .4 + .3), .3);
+    }
+    label(p, '…', 1420, 345, m('seq', 2.4), COL.dim, 40);
+    banner(p, 'Order — क्रम', 800, 440, m('order', .2), { w: 360, size: 34 });
+    // the wrong row
+    const wrongRow = G(p, { o: 0 }); show(wrongRow, m('wrong'));
+    ['1', '7', '3'].forEach((s, i) => { const c = nChip(wrongRow, s, 600 + i * 200, 600, { size: 46, w: 90, color: GREY }); pop(c, m('wrong', .3 + i * .6)); if (i) nArrow(wrongRow, 600 + i * 200 - 150, 600 + i * 200 - 60, 600, COL.faint, m('wrong', .1 + i * .6), .3); });
+    for (let k = 0; k < 3; k++) { tw(wrongRow, { x: 10 }, m('odd', k * .2), .1); tw(wrongRow, { x: -10 }, m('odd', k * .2 + .1), .1); } tw(wrongRow, { x: 0 }, m('odd', .6), .1);
+    const cross = path(p, 'M520 540L1080 660M1080 540L520 660', { stroke: CORAL, 'stroke-width': 9, 'stroke-linecap': 'round', opacity: .6 }, { d: 0 }); draw(cross, m('odd', .7), .6);
+    label(p, 'काहीतरी चुकीचं वाटतं!', 800, 710, m('odd', 1.2), CORAL, 30);
+    note(p, 'Numbers चा स्वतःचा क्रम असतो.', 800, 820, m('why', .3), SAFF, 38);
+  }],
+
+  ['line', 'Number Line — संख्या रेषा', (m) => {
+    const p = panel(0);
+    title(p, 'Number Line — संख्या रेषा', .1);
+    label(p, 'जमिनीवर एक सरळ रेषा काढा. त्यावर लिहा…', 800, 190, m('draw', .2), COL.dim, 28);
+    const L = nLine(p, 320, 520, 160, 0, 6, m('draw', .5), m('ticks', .2), { step: .35 });
+    const nm = label(p, 'ही आहे Number Line.', 800, 650, m('ticks', 3.2), SAFF, 32);
+    const d = nDot(p, L._x(2), 520); pop(d, m('place', .4));
+    label(p, 'प्रत्येक number ची एक जागा', 800, 290, m('place', .8), COL.dim, 26);
+    hide(nm, m('right'), .3);
+    nArrow(p, L._x(2), L._x(4) + 20, 430, SAFF, m('right', .2), .8);
+    hop(d, L._x(3), m('right', .3), .45, 50); hop(d, L._x(4), m('right', .85), .45, 50);
+    pulse(L._ticks[4], m('right', 1.3), 1.25);
+    label(p, 'उजवीकडे → संख्या वाढते', L._x(3), 400, m('right', .6), SAFF, 30);
+    nArrow(p, L._x(4), L._x(1) - 20, 650, GREY, m('left', .2), 1);
+    [3, 2, 1].forEach((v, i) => hop(d, L._x(v), m('left', .3 + i * .45), .45, 50));
+    tw(d.firstChild, { c_fill: GREY }, m('left', .3), 1.2);
+    label(p, 'डावीकडे ← संख्या कमी होते', L._x(2.5), 710, m('left', .8), GREY, 30);
+    banner(p, 'मोजणं + संबंध समजणं — दोन्ही Number Line वर', 800, 820, m('rel', .4), { w: 1000, size: 32 });
+  }],
+
+  ['compare', 'Greater आणि Smaller', (m) => {
+    const p = panel(0);
+    title(p, 'Greater आणि Smaller', .1);
+    const L = nLine(p, 200, 470, 120, 0, 10, .3, .6, { step: .08 });
+    const d5 = nDot(p, L._x(5), 470, GREY), d8 = nDot(p, L._x(8), 470, SAFF);
+    const t8 = nChip(p, '8', L._x(8), 360, { size: 50, w: 90 }), t5 = nChip(p, '5', L._x(5), 360, { size: 50, w: 90, color: GREY });
+    pop(t8, m('nums', .1)); pop(d8, m('nums', .2)); pop(t5, m('nums', .7)); pop(d5, m('nums', .8));
+    label(p, 'समजा: 8 आणि 5', 800, 190, m('nums', -.3), COL.dim, 30);
+    pulse(t8, m('big', 1.4), 1.3); label(p, 'मोठी — उजवीकडे', L._x(8), 280, m('big', 1.5), SAFF, 28);
+    pulse(t5, m('small', .6), 1.3); label(p, 'लहान — डावीकडे', L._x(5), 280, m('small', .7), GREY, 28);
+    const eq = G(p, { x: 800, y: 660, o: 0, s: .7 });
+    T(eq, '8 > 5', { y: 26, size: 84, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD }); pop(eq, m('sym', .3));
+    label(p, 'eight is greater than five', 800, 720, m('sym', 1.2), PLUM, 30);
+    [['>', 'Greater than', SAFF], ['<', 'Less than', GREY], ['=', 'Equal to', SKY]].forEach(([s, en, c], i) => {
+      const g = G(p, { x: 360 + i * 440, y: 820, o: 0, s: .8 });
+      mk('rect', { x: -180, y: -40, width: 360, height: 80, rx: 40, fill: '#fff', stroke: c, 'stroke-width': 3 }, g);
+      T(g, s, { x: -120, y: 16, size: 46, fill: c, weight: 800, anchor: 'middle', font: HEAD });
+      T(g, en, { x: 30, y: 12, size: 30, fill: COL.chalk, weight: 700, anchor: 'middle' });
+      pop(g, m('signs', .8 + i * 1.1));
+    });
+  }],
+
+  ['q2', 'छोटी तपासणी', () => {
+    const p = panel(0);
+    title(p, 'गावातील दोन शेतं', .1, 90);
+    const A = nField(p, 120, 150, 620, 400, 8), B = nField(p, 860, 150, 620, 400, 12);
+    show(A, .2, .4); show(B, .4, .4);
+    label(p, 'शेत A', 430, 135, .3, LEAF, 28); label(p, 'शेत B', 1170, 135, .5, LEAF, 28);
+    S.fields = [A, B];
+  }, { ask: done => quiz({ x: 200, y: 600, w: 1200, cls: 'side', maxH: 280 }, [{
+    id: 'c-field', prompt: ['कोणत्या शेतात जास्त झाडं आहेत? त्या शेतावर टॅप करा.'],
+    build: pickEls([{ el: S.fields[0], box: [120, 150, 620, 400], label: 'शेत A, आठ झाडं' }, { el: S.fields[1], box: [860, 150, 620, 400], label: 'शेत B, बारा झाडं' }],
+      1, 'बरोबर! शेत B मध्ये 12 झाडं, शेत A मध्ये 8. बारा आठपेक्षा मोठी: 12 > 8.',
+      () => 'पुन्हा मोजा. शेत A मध्ये 8 झाडं आहेत, शेत B मध्ये 12. 8 < 12, म्हणजे A मध्ये कमी.',
+      () => floatText('12 > 8', 800, 580, SAFF)),
+  }], done, 'छोटी तपासणी') }],
+
+  ['money', 'Numbers आणि पैसे', (m) => {
+    const p = panel(0);
+    title(p, 'Numbers आणि पैसे', .1);
+    label(p, 'रोजच्या आयुष्यात Numbers चा सर्वात महत्त्वाचा उपयोग कुठे?', 800, 190, .5, COL.dim, 28);
+    [10, 20, 50, 100, 500].forEach((v, i) => { const n = nNote(p, v, 800, 300, .9); tw(n, { o: 1, x: 300 + i * 250 }, m('notes', .3 + i * .35), .5, out); });
+    // the ₹100 bar: 10 px per rupee
+    const bar = G(p, { o: 0 }); show(bar, m('have'), .4);
+    mk('rect', { x: 300, y: 480, width: 1000, height: 90, rx: 14, fill: '#fff', stroke: SAFF, 'stroke-width': 3 }, bar);
+    const have = label(bar, '₹100 आहेत', 800, 455, m('have', .3), SAFF, 32);
+    const spent = G(p, { o: 0 }); show(spent, m('have'), .4);
+    mk('rect', { x: 300, y: 480, width: 350, height: 90, rx: 14, fill: '#fde68a' }, spent);
+    T(spent, '₹35 खर्च', { x: 475, y: 535, size: 32, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD, o: 0 });
+    const spentLabel = spent.lastChild;
+    const rest = G(p, { o: 0 }); show(rest, m('have'), .4);
+    mk('rect', { x: 650, y: 480, width: 650, height: 90, rx: 14, fill: '#fde68a' }, rest);
+    show(spentLabel, m('spend', .2), .3);
+    tw(spent, { y: 110, o: 0 }, m('spend', 1.2), 1.1, io);
+    hide(have, m('spend', 1.2), .4);
+    const restLabel = T(rest, '₹65 उरले', { x: 975, y: 535, size: 34, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD, o: 0 }); show(restLabel, m('left', .6), .3);
+    const restRect = rest.firstChild; put(restRect, { c_fill: '#fde68a' }); tw(restRect, { c_fill: SAFF }, m('left', .6), .5);
+    put(restLabel, { c_fill: SAFF }); tw(restLabel, { c_fill: '#fff' }, m('left', .6), .5);
+    const eq = G(p, { x: 800, y: 690, o: 0, s: .7 });
+    T(eq, '100 − 35 = 65', { y: 22, size: 70, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD }); pop(eq, m('left', 1));
+    note(p, 'हा फक्त calculation नाही. हा रोजच्या आयुष्याचा भाग आहे.', 800, 820, m('life', .3), SAFF, 34);
+  }],
+
+  ['q3', 'छोटी तपासणी', () => {
+    const p = panel(0);
+    const n = nNote(p, 50, 380, 330, 1.7); show(n, .2, .4);
+    const t = nChip(p, '₹20 खर्च', 380, 520, { size: 34, color: CORAL }); pop(t, .8);
+    label(p, 'किती उरले?', 380, 620, 1.2, COL.dim, 30);
+  }, { ask: done => quiz({ x: 740, y: 230, w: 760, cls: 'side', maxH: 440 }, [{
+    id: 'c-left', prompt: ['तुमच्याकडे ₹50 आहेत. तुम्ही ₹20 खर्च केले. किती रुपये उरले?'],
+    build: blanks([{ parts: ['50 − 20 = ', { box: '30' }], why: 'बरोबर! पन्नासमधून वीस गेले, तीस उरले. ₹30.', hint: 'पन्नासमधून वीस काढा: 50 − 20. उत्तर इंग्रजी अंकांत (0–9) लिहा.' }]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['measure', 'Numbers आणि मोजमाप', (m) => {
+    const p = panel(0);
+    title(p, 'Numbers आणि मोजमाप', .1);
+    const mcard = (x, y, q, val, mark, drawer) => {
+      const g = kcard(p, x, y, 640, 300, SAFF, { o: 0 }); tw(g, { o: 1 }, m(mark), .5);
+      T(g, q, { x: 40, y: 56, size: 30, fill: COL.chalk, weight: 700 });
+      const d = drawer(g); show(d, m(mark, .3), .4);
+      const v = nChip(g, val, 480, 190, { size: 40 }); pop(v, m(mark, 1.6));
+    };
+    mcard(140, 170, 'टेबल किती लांब आहे?', '120 cm', 'table', g => nTable(g, 200, 260, 1.1));
+    mcard(820, 170, 'बाटलीत किती पाणी आहे?', '1 litre', 'bottle', g => nBottle(g, 200, 270, 1));
+    mcard(140, 500, 'तुमचं वजन किती आहे?', '40 kg', 'weight', g => nScale(g, 200, 280, 1));
+    mcard(820, 500, 'वेळ किती झाली?', '10:30 am', 'time', g => nClock(g, 200, 190, 1));
+    banner(p, 'Numbers = जगातील गोष्टी मोजण्याची भाषा', 800, 850, m('lang', .4), { w: 900, size: 32 });
+  }],
+
+  ['think', 'Maths म्हणजे विचार करण्याची पद्धत', (m) => {
+    const p = panel(0);
+    title(p, 'Maths म्हणजे विचार करण्याची पद्धत', .1, 90);
+    [['+', 'बेरीज'], ['−', 'वजाबाकी'], ['×', 'गुणाकार'], ['÷', 'भागाकार']].forEach(([s, mr], i) => {
+      const c = nChip(p, `${s}  ${mr}`, 320 + i * 320, 180, { size: 32, font: UI }); pop(c, m('ops', .2 + i * .7));
+    });
+    label(p, 'पण Maths म्हणजे फक्त calculation नाही — Maths विचार करायला शिकवतं.', 800, 265, m('but', .3), COL.dim, 26);
+    const mg = Array.from({ length: 10 }, (_, i) => { const e = nMango(p, 300 + i * 110, 360, 1.05); pop(e, m('ten', .3 + i * .1)); return e; });
+    label(p, '10 आंबे', 800, 305, m('ten', .2), SAFF, 30);
+    const friends = [0, 1, 2, 3].map(i => { const f = boy(p, 380 + i * 280, 860, .62); show(f, m('give', .2 + i * .15), .3); return f; });
+    mg.slice(0, 8).forEach((e, i) => { const f = Math.floor(i / 2); tw(e, { x: 380 + f * 280 + (i % 2 ? 30 : -30), y: 700 }, m('give', 1.2 + i * .25), .7, io); });
+    const e1 = G(p, { x: 800, y: 470, o: 0, s: .7 }); T(e1, '4 × 2 = 8', { y: 18, size: 56, fill: COL.chalk, weight: 800, anchor: 'middle', font: HEAD }); pop(e1, m('step1', 1.4));
+    label(p, '10 मधून 8 गेले (4 मित्र × प्रत्येकी 2)', 800, 520, m('step1', 2), COL.dim, 24);
+    const e2 = G(p, { x: 800, y: 585, o: 0, s: .7 }); T(e2, '10 − 8 = 2', { y: 18, size: 56, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD }); pop(e2, m('step2', 1));
+    mg.slice(8).forEach(e => pulse(e, m('ans', .2), 1.4));
+    banner(p, 'Answer: 2 mangoes', 1310, 450, m('ans', .3), { w: 440, size: 34, color: PLUM });
+  }],
+
+  ['english', 'Numbers ची स्वतःची भाषा', (m) => {
+    const p = panel(0);
+    title(p, 'Numbers ची स्वतःची भाषा', .1, 90);
+    const W = kcard(p, 100, 150, 640, 660, PLUM, { o: 0 }); tw(W, { o: 1 }, .4, .5);
+    T(W, 'Maths चे English शब्द', { x: 320, y: 56, size: 30, fill: PLUM, weight: 800, anchor: 'middle', font: HEAD });
+    [['Number', 'संख्या'], ['Count', 'मोजणे'], ['Greater', 'मोठी संख्या'], ['Smaller', 'लहान संख्या'], ['Equal', 'समान'], ['Add', 'बेरीज करणे'], ['Subtract', 'वजाबाकी करणे']].forEach(([en, mr], i) => {
+      const y = 130 + i * 78;
+      const en_ = T(W, en, { x: 60, y, size: 36, fill: PLUM, weight: 800, font: HEAD, o: 0 }); show(en_, m('w' + (i + 1)), .3);
+      const dash = T(W, '—', { x: 290, y: y - 2, size: 30, fill: COL.faint, o: 0 }); show(dash, m('w' + (i + 1), .2), .3);
+      const mr_ = T(W, mr, { x: 340, y, size: 30, fill: COL.chalk, weight: 600, o: 0 }); show(mr_, m('w' + (i + 1), .3), .3);
+    });
+    const Sn = kcard(p, 780, 150, 720, 660, PLUM, { o: 0 }); tw(Sn, { o: 1 }, m('sent'), .5);
+    T(Sn, 'Maths in English', { x: 360, y: 56, size: 30, fill: PLUM, weight: 800, anchor: 'middle', font: HEAD });
+    [['This is a number.', 'ही एक संख्या आहे.'], ['I can count.', 'मी मोजू शकतो.'], ['Five is greater than three.', '5 > 3'], ['Ten is less than twelve.', '10 < 12'], ['I use numbers every day.', 'मी रोज numbers वापरतो.']].forEach(([en, mr], i) => {
+      const y = 130 + i * 108;
+      const a = T(Sn, en, { x: 50, y, size: 36, fill: PLUM, weight: 800, font: HEAD, o: 0 }); show(a, m('s' + (i + 1)), .3);
+      const b = T(Sn, mr, { x: 50, y: y + 44, size: 26, fill: COL.dim, weight: 600, o: 0 }); show(b, m('s' + (i + 1), .5), .3);
+    });
+    note(p, 'पाठ करण्यापेक्षा अर्थ समजून घ्या.', 800, 865, m('mean', .3), SAFF, 32);
+  }],
+
+  ['look', 'Look Around', (m) => {
+    const p = panel(0);
+    title(p, 'Look Around · आजूबाजूला पाहा', .1, 90);
+    [['🏠', 'घराचा नंबर'], ['🕰️', 'घड्याळ'], ['📱', 'मोबाईल'], ['📅', 'कॅलेंडर'], ['💵', 'पैसे'], ['🚗', 'वाहन क्रमांक']].forEach(([ic, mr], i) => {
+      const c = i % 2, r = Math.floor(i / 2);
+      const g = kcard(p, 120 + c * 400, 170 + r * 190, 360, 150, SAFF, { o: 0, s: .9 }); tw(g, { o: 1, s: 1 }, m('l1', .3 + i * .55), .4, back);
+      T(g, ic, { x: 70, y: 96, size: 56, anchor: 'middle' });
+      T(g, mr + '?', { x: 130, y: 90, size: 30, fill: COL.chalk, weight: 700 });
+    });
+    const ten = G(p, { x: 1180, y: 300, o: 0, s: .6 });
+    mk('circle', { r: 90, fill: SAFF }, ten); T(ten, '10', { y: 26, size: 84, fill: '#fff', weight: 800, anchor: 'middle', font: HEAD });
+    pop(ten, m('ten', .3));
+    label(p, 'किमान 10 ठिकाणी Numbers शोधा', 1180, 440, m('ten', .9), SAFF, 28);
+    const q = G(p, { x: 1180, y: 600, o: 0, s: .8 });
+    mk('rect', { x: -260, y: -70, width: 520, height: 140, rx: 24, fill: '#fff', stroke: PLUM, 'stroke-width': 3 }, q);
+    T(q, '🧠 Think Like a Mathematician', { y: -22, size: 26, fill: PLUM, weight: 800, anchor: 'middle', font: HEAD });
+    T(q, '“हे किती आहे? हे मी कसं शोधू शकतो?”', { y: 30, size: 28, fill: COL.chalk, weight: 700, anchor: 'middle' });
+    pop(q, m('ask', .6));
+    note(p, 'Maths पुस्तकातून बाहेर… तुमच्या आयुष्यात.', 800, 830, m('out', 1.2), SAFF, 36);
+  }],
+
+  ['evening', 'त्या दिवशी…', (m) => {
+    const p = panel(0);
+    const sky = mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: '#fcd9a8' }, p); put(sky, { o: 0 }); show(sky, 0, .8);
+    mk('path', { d: 'M0 660q500-70 1000-20t600 10V900H0z', fill: '#d9e7b7' }, p);
+    const sun = mk('circle', { cx: 260, cy: 600, r: 56, fill: '#fb923c' }, p); put(sun, { o: 0 }); show(sun, .2, .6);
+    text(p, 'त्या दिवशी…', 800, 110, .3, { size: 46, fill: COL.chalk, weight: 700, anchor: 'middle', font: SCRIPT });
+    const hs = nHouse(p, 1250, 700, 1); show(hs, m('eve'), .5);
+    const plate = nChip(p, '12', 1250 - 90, 700 - 40, { size: 26, w: 56 }); 
+    const b = boy(p, -60, 700, 1); show(b, m('eve'), .3); tw(b, { x: 760 }, m('eve', .2), 2.6, io);
+    const bag = nBag(p, -10, 700, .8); show(bag, m('eve'), .3); tw(bag, { x: 820 }, m('eve', .2), 2.6, io);
+    const mom = nPerson(p, 1030, 700, .9, '#f472b6', 'long'); show(mom, m('aai', -.3), .4);
+    const b1 = bubble(p, 'किती पैसे खर्च झाले?', 1030, 420, m('aai', .2), { w: 420, color: '#f472b6' });
+    const smile = note(p, '😊', 760, 500, m('smile', .8), SAFF, 48, 0);
+    hide(b1, m('real'), .4);
+    const n20 = nNote(p, 20, 700, 560, .6); pop(n20, m('real', .9));
+    pop(plate, m('real', 1.6));
+    const tag = nChip(p, '2 kg', 820, 560, { size: 26 }); pop(tag, m('real', 2.3));
+    banner(p, 'Numbers फक्त पुस्तकात नाहीत — ते तुमच्या हातात, तुमच्या घरात आहेत.', 800, 830, m('real', .3), { w: 1200, size: 30 });
+  }],
+
+  ['wrap', 'आज आपण काय शिकलो?', (m) => {
+    const p = panel(0);
+    title(p, 'आज आपण काय शिकलो?', .1);
+    [['Number म्हणजे संख्या. ती सांगते: किती?', 'w1', SAFF],
+     ['Numbers are everywhere. ते अस्पष्ट गोष्टी स्पष्ट करतात.', 'w2', PLUM],
+     ['Number Line: उजवीकडे मोठी, डावीकडे लहान. 8 > 5', 'w3', SKY],
+     ['Maths = फक्त calculation नाही, विचार करण्याची पद्धत.', 'w4', LEAF]].forEach(([str, mark, color], i) => {
+      const g = G(p, { x: -16, y: 250 + i * 120, o: 0 });
+      mk('circle', { cx: 240, cy: -12, r: 28, fill: color }, g);
+      T(g, String(i + 1), { x: 240, y: -1, size: 28, fill: '#fff', weight: 800, anchor: 'middle' });
+      T(g, str, { x: 294, size: 32, weight: 700 });
+      tw(g, { o: 1, x: 0 }, m(mark), .6);
+    });
+  }],
+
+  ['final1', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-calc', prompt: ['रिकाम्या जागा भरा. उत्तर इंग्रजी अंकांत (0–9) लिहा.'],
+    build: blanks([
+      { parts: ['10 आंबे, 4 मित्रांना प्रत्येकी 2:   4 × 2 = ', { box: '8' }, ' ,   10 − 8 = ', { box: '2' }], why: 'चार गुणिले दोन म्हणजे आठ आंबे गेले; दहा वजा आठ, दोन उरले.', hint: 'आधी किती गेले ते शोधा: 4 × 2. मग 10 मधून ते वजा करा.' },
+      { parts: ['₹100 होते, ₹35 खर्च:   100 − 35 = ', { box: '65' }], why: 'शंभरातून पस्तीस गेले, पासष्ट उरले.', hint: '100 मधून 35 वजा करा. 100 − 30 = 70, मग आणखी 5 कमी.' },
+      { parts: ['Number Line:   0,  1,  2,  ', { box: '3' }, ',  4,  5,  ', { box: '6' }], why: 'Numbers चा क्रम: 2 नंतर 3, आणि 5 नंतर 6.', hint: 'उजवीकडे गेलं की संख्या एकाने वाढते.' },
+    ]),
+  }], done, 'धड्याचा सराव   १ पैकी २') }],
+
+  ['final2', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-sign', prompt: ['प्रत्येक ओळ बरोबर आहे की चूक?  (> म्हणजे greater than, < म्हणजे less than)'],
+    build: grid([
+      { parts: ['8 > 5'], ans: ['t'], why: 'आठ पाचपेक्षा मोठी. Number Line वर 8 उजवीकडे आहे.' },
+      { parts: ['3 > 7'], ans: ['f'], why: 'तीन सातपेक्षा लहान आहे. बरोबर: 3 < 7.' },
+      { parts: ['12 < 8'], ans: ['f'], why: 'बारा आठपेक्षा मोठी आहे. बरोबर: 12 > 8.' },
+      { parts: ['6 = 6'], ans: ['t'], why: 'दोन्ही बाजू समान. Equal to.' },
+      { parts: ['10 < 12'], ans: ['t'], why: 'Ten is less than twelve. दहा बारापेक्षा लहान.' },
+    ], [['t', 'बरोबर ✓', COL.good], ['f', 'चूक ✗', COL.bad]], { multi: false }),
+  }], done, 'धड्याचा सराव   २ पैकी २') }],
+
+  ['finish', 'पूर्ण', () => { panel(0); }, { ask: finishCard }],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script></body></html>

@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>३ · My Digital World</title>
+<link rel="stylesheet" href="../lib/engine.css">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js"></script>
+<script src="audio/mr/timings.js"></script>
+<script>
+'use strict';
+const CHAPTER = { number: 3, title: 'My Digital World', minutes: 13, language: 'mr', next: '../ch04/' };
+
+/* ---------- palette roles ---------- */
+const CORAL = '#e0524d', SKY = COL.whole, LIVE = COL.leaf, SAFF = COL.int, PLUM = COL.irr, DEAD = COL.stone, BARK = COL.bark;
+const CORAL2 = '#fff1f0';   // pale coral card fill
+const INK = '#2b2a33';
+
+/* ---------- text helpers (as in ch01) ---------- */
+const text = (p, str, x, y, t0, { size = 32, fill = COL.chalk, anchor = 'start', weight = 500, font = UI } = {}) => {
+  const e = T(p, str, { x, y, size, fill, anchor, weight, font, o: 0 }); show(e, t0); return e;
+};
+const title = (p, str, t0 = .1, y = 120, fill = CORAL) => text(p, str, 800, y, t0, { size: 54, weight: 800, anchor: 'middle', font: HEAD, fill });
+const note = (p, str, x, y, t0, fill = SAFF, size = 36, r = -3) => {
+  const g = G(p, { x, y, o: 0, r }); T(g, str, { size, fill, font: SCRIPT, weight: 700, anchor: 'middle' }); show(g, t0); return g;
+};
+function label(p, str, x, y, t0, color = COL.chalk, size = 26) { return text(p, str, x, y, t0, { size, fill: color, anchor: 'middle', weight: 700 }); }
+function bubble(p, str, x, y, t0, { w = 420, color = SAFF, size = 30, font = UI } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  mk('path', { d: `M${-w / 2} -40h${w}a16 16 0 0 1 16 16v56a16 16 0 0 1-16 16h${-w / 2 + 40}l-24 26v-26h${-w / 2 + 8}a16 16 0 0 1-16-16v-56a16 16 0 0 1 16-16z`, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 12, size, fill: COL.chalk, weight: 600, anchor: 'middle', font });
+  pop(g, t0); return g;
+}
+function kcard(p, x, y, w, h, color, { o = 0, s = 1, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o, s });
+  mk('rect', { x: 0, y: 0, width: w, height: h, rx: 22, fill, stroke: COL.edge || '#f1e4d0', 'stroke-width': 2 }, g);
+  mk('path', { d: `M22 0h-4a18 18 0 0 0-18 18v${h - 36}a18 18 0 0 0 18 18h4z`, fill: color }, g);
+  return g;
+}
+// pill banner centred on (x,y)
+function dwBanner(p, str, x, y, t0, { w = 760, color = CORAL, size = 40, fill = '#fff', sub } = {}) {
+  const g = G(p, { x, y, o: 0, s: .8 });
+  mk('rect', { x: -w / 2, y: -46, width: w, height: sub ? 120 : 92, rx: 46, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: sub ? 2 : 14, size, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  if (sub) T(g, sub, { y: 52, size: 26, fill: COL.dim, weight: 600, anchor: 'middle' });
+  pop(g, t0); return g;
+}
+// word chip (rounded box) centred on (x,y)
+function dwChip(p, str, x, y, color, { size = 32, w, h = 64, fill = '#fff', font = HEAD } = {}) {
+  const ww = w || Math.max(90, Math.round(str.length * size * .56) + 44);
+  const g = G(p, { x, y, o: 0, s: .8 });
+  mk('rect', { x: -ww / 2, y: -h / 2, width: ww, height: h, rx: 16, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: size * .36, size, fill: color, weight: 800, anchor: 'middle', font });
+  g._w = ww; return g;
+}
+const ground = (p, y = 700, t0 = .1, x0 = 80, x1 = 1520) => { const l = path(p, `M${x0} ${y}H${x1}`, { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(l, t0, 1); return l; };
+// a stroked arrow from (x0,y0) to (x1,y1), drawn on
+function dwArrow(p, x0, y0, x1, y1, t0, color = COL.dim, dur = .5) {
+  const a = path(p, `M${x0} ${y0}L${x1} ${y1}`, { stroke: color, 'stroke-width': 5 }, { d: 0 }); draw(a, t0, dur);
+  const ang = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
+  const h = mk('path', { d: 'M-16 -12L0 0L-16 12', stroke: color, 'stroke-width': 5, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', transform: `translate(${x1} ${y1}) rotate(${ang})` }, p);
+  put(h, { o: 0 }); show(h, t0 + dur, .2); return a;
+}
+
+/* ---------- drawn things from ch01 (boy, tree, cow, car), each around (0,0) on its baseline ---------- */
+function boy(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -22, y: -120, width: 44, height: 70, rx: 14, fill: SKY }, g);
+  mk('rect', { x: -20, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g); mk('rect', { x: 3, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g);
+  mk('circle', { cx: 0, cy: -146, r: 30, fill: '#f1c7a0' }, g);
+  mk('path', { d: 'M-30 -152q4-30 30-30q26 0 30 30q-18-10-30-6q-12-4-30 6z', fill: '#2b2a33' }, g);
+  mk('circle', { cx: -10, cy: -148, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 10, cy: -148, r: 3.5, fill: COL.chalk }, g);
+  mk('path', { d: 'M-9 -134q9 8 18 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  const arms = mk('path', { d: 'M-22 -108l-18 30M22 -108l18 30', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+  g._arms = arms;
+  return g;
+}
+function tree(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-14 0V-90q0-14 14-14q14 0 14 14V0z', fill: BARK }, g);
+  mk('circle', { cx: 0, cy: -150, r: 70, fill: COL.leaf2 }, g);
+  mk('circle', { cx: -52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 0, cy: -110, r: 50, fill: COL.leaf2 }, g);
+  return g;
+}
+function cow(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -70, y: -90, width: 140, height: 70, rx: 30, fill: '#f5efe6', stroke: COL.chalk, 'stroke-width': 3 }, g);
+  mk('ellipse', { cx: -20, cy: -70, rx: 18, ry: 14, fill: '#4b4b55' }, g); mk('ellipse', { cx: 30, cy: -45, rx: 16, ry: 12, fill: '#4b4b55' }, g);
+  [-50, -20, 20, 50].forEach(lx => mk('rect', { x: lx - 7, y: -24, width: 14, height: 26, rx: 5, fill: '#e6dccd', stroke: COL.chalk, 'stroke-width': 2 }, g));
+  mk('rect', { x: 56, y: -112, width: 48, height: 46, rx: 18, fill: '#f5efe6', stroke: COL.chalk, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M62 -112q-4-18 10-20M98 -112q4-18-10-20', stroke: COL.chalk, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('circle', { cx: 74, cy: -94, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 90, cy: -94, r: 3.5, fill: COL.chalk }, g);
+  mk('ellipse', { cx: 82, cy: -76, rx: 14, ry: 8, fill: COL.rose }, g);
+  mk('path', { d: 'M-70 -80q-24 10-18 44', stroke: COL.chalk, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+  return g;
+}
+function car(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-80 -20h160v-30h-40l-24-30h-56l-24 30h-16z', fill: '#f87171', stroke: COL.chalk, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  mk('rect', { x: -40, y: -74, width: 30, height: 22, rx: 4, fill: COL.sky }, g); mk('rect', { x: 0, y: -74, width: 34, height: 22, rx: 4, fill: COL.sky }, g);
+  mk('circle', { cx: -44, cy: -18, r: 16, fill: '#2b2a33' }, g); mk('circle', { cx: 44, cy: -18, r: 16, fill: '#2b2a33' }, g);
+  return g;
+}
+// small house (hut) on its baseline
+function dwHouse(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -90, y: -100, width: 180, height: 100, rx: 8, fill: '#fde68a', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-108 -100L0 -176L108 -100z', fill: '#c2410c' }, g);
+  mk('rect', { x: -22, y: -60, width: 44, height: 60, rx: 6, fill: BARK }, g);
+  return g;
+}
+
+/* ---------- devices (dw- prefix), each centred on (0,0) ---------- */
+// phone: body + white screen; g._scr is a group for screen content (screen spans x ±52, y ±95), g._screen the screen rect
+function dwPhone(p, x, y, s = 1, color = INK) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -62, y: -112, width: 124, height: 224, rx: 20, fill: color }, g);
+  g._screen = mk('rect', { x: -52, y: -96, width: 104, height: 190, rx: 10, fill: '#fff' }, g);
+  mk('rect', { x: -14, y: -106, width: 28, height: 5, rx: 2.5, fill: '#6b7280' }, g);
+  const cid = 'dwclip' + (++dwPhone.n);
+  const cp = mk('clipPath', { id: cid }, g); mk('rect', { x: -52, y: -96, width: 104, height: 190, rx: 10 }, cp);
+  const wrap = mk('g', { 'clip-path': `url(#${cid})` }, g);
+  g._scr = G(wrap, {});
+  return g;
+}
+dwPhone.n = 0;
+function dwLaptop(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -90, y: -120, width: 180, height: 116, rx: 10, fill: INK }, g);
+  g._screen = mk('rect', { x: -80, y: -110, width: 160, height: 96, rx: 6, fill: '#fff' }, g);
+  mk('path', { d: 'M-110 -4h220l14 20h-248z', fill: '#9ca3af' }, g);
+  mk('rect', { x: -30, y: 2, width: 60, height: 6, rx: 3, fill: '#6b7280' }, g);
+  g._scr = G(g, {});
+  return g;
+}
+function dwTv(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -100, y: -130, width: 200, height: 120, rx: 8, fill: INK }, g);
+  g._screen = mk('rect', { x: -90, y: -120, width: 180, height: 100, rx: 4, fill: '#bfe3ff' }, g);
+  mk('path', { d: 'M-40 -10l-20 10h120l-20-10z', fill: '#6b7280' }, g);
+  mk('rect', { x: -60, y: -2, width: 120, height: 6, rx: 3, fill: '#6b7280' }, g);
+  g._scr = G(g, {});
+  return g;
+}
+function dwMixer(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -50, y: -60, width: 100, height: 60, rx: 12, fill: CORAL }, g);
+  mk('circle', { cx: 0, cy: -30, r: 10, fill: '#fff' }, g); mk('circle', { cx: 26, cy: -30, r: 6, fill: '#fff' }, g);
+  mk('path', { d: 'M-34 -60v-70q0-10 10-10h48q10 0 10 10v70z', fill: '#e5e7eb', stroke: '#9ca3af', 'stroke-width': 3 }, g);
+  mk('rect', { x: -38, y: -148, width: 76, height: 12, rx: 6, fill: '#6b7280' }, g);
+  mk('path', { d: 'M-22 -72v-40M-10 -72v-40', stroke: '#cbd5e1', 'stroke-width': 3 }, g);
+  return g;
+}
+function dwWifi(p, x, y, s = 1, color = SKY) {
+  const g = G(p, { x, y, s, o: 0 });
+  [26, 52, 78].forEach((r, i) => mk('path', { d: `M${-r * .72} ${-r * .72}A${r} ${r} 0 0 1 ${r * .72} ${-r * .72}`, stroke: color, 'stroke-width': 9, fill: 'none', 'stroke-linecap': 'round', opacity: 1 - i * .25 }, g));
+  mk('circle', { cx: 0, cy: 0, r: 10, fill: color }, g);
+  return g;
+}
+function dwWatch(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -26, y: -110, width: 52, height: 220, rx: 14, fill: INK }, g);
+  mk('rect', { x: -46, y: -56, width: 92, height: 112, rx: 22, fill: '#374151' }, g);
+  mk('rect', { x: -36, y: -46, width: 72, height: 92, rx: 16, fill: '#bfe3ff' }, g);
+  T(g, '7:30', { y: 10, size: 26, fill: INK, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+// traffic light on a pole; g._lights = [red, amber, green] circles
+function dwSignal(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -6, y: -120, width: 12, height: 120, fill: '#4b5563' }, g);
+  mk('rect', { x: -34, y: -270, width: 68, height: 160, rx: 14, fill: INK }, g);
+  g._lights = [['#ef4444', -230], ['#f59e0b', -190], ['#22c55e', -150]].map(([c, cy]) => mk('circle', { cx: 0, cy, r: 17, fill: c, opacity: .25 }, g));
+  return g;
+}
+function dwLetter(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -70, y: -46, width: 140, height: 92, rx: 8, fill: '#fff7e6', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-70 -46L0 10L70 -46', stroke: BARK, 'stroke-width': 3, fill: 'none' }, g);
+  mk('rect', { x: 36, y: -36, width: 24, height: 28, fill: CORAL, opacity: .8 }, g);
+  return g;
+}
+function dwOldPhone(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-60 0q-10-70 60-70q70 0 60 70z', fill: INK }, g);
+  mk('circle', { cx: 0, cy: -34, r: 18, fill: '#fff' }, g);
+  mk('path', { d: 'M-70 -92q70-30 140 0l-10 22q-60-24-120 0z', fill: INK }, g);
+  mk('path', { d: 'M-50 -82q-20 20-10 40', stroke: INK, 'stroke-width': 5, fill: 'none' }, g);
+  return g;
+}
+function dwShield(p, x, y, s = 1, color = CORAL) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M0 -110L90 -78v70q0 70-90 118q-90-48-90-118v-70z', fill: '#fff', stroke: color, 'stroke-width': 6 }, g);
+  mk('path', { d: 'M0 -110L90 -78v70q0 70-90 118z', fill: color, opacity: .25 }, g);
+  mk('path', { d: 'M-34 -8l24 24l46-54', stroke: color, 'stroke-width': 10, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+  return g;
+}
+// a building with a sign (school, hospital, bank); sign text + a colour
+function dwBuilding(p, x, y, s = 1, { sign = '', color = SKY, icon = '' } = {}) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -110, y: -150, width: 220, height: 150, rx: 8, fill: '#f3f4f6', stroke: '#9ca3af', 'stroke-width': 3 }, g);
+  mk('rect', { x: -120, y: -170, width: 240, height: 30, rx: 6, fill: color }, g);
+  T(g, sign, { y: -148, size: 22, fill: '#fff', weight: 800, anchor: 'middle', font: HEAD });
+  [-80, -30, 20, 70].forEach(wx => mk('rect', { x: wx + 6, y: -120, width: 26, height: 30, rx: 3, fill: '#bfe3ff', stroke: '#9ca3af', 'stroke-width': 2 }, g));
+  mk('rect', { x: -26, y: -70, width: 52, height: 70, rx: 6, fill: color }, g);
+  if (icon) T(g, icon, { x: 70, y: -40, size: 40, anchor: 'middle' }, g);
+  return g;
+}
+function dwBus(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -110, y: -110, width: 220, height: 90, rx: 14, fill: SAFF, stroke: INK, 'stroke-width': 3 }, g);
+  [-90, -40, 10, 60].forEach(wx => mk('rect', { x: wx, y: -96, width: 36, height: 30, rx: 4, fill: '#bfe3ff' }, g));
+  mk('circle', { cx: -60, cy: -18, r: 18, fill: INK }, g); mk('circle', { cx: 60, cy: -18, r: 18, fill: INK }, g);
+  return g;
+}
+function dwBook(p, x, y, s = 1, color = SAFF) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -40, y: -30, width: 80, height: 60, rx: 6, fill: color, stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M0 -30v60', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-30 -14h20M-30 0h20M10 -14h20M10 0h20', stroke: '#fff', 'stroke-width': 3, opacity: .7 }, g);
+  return g;
+}
+function dwPin(p, x, y, s = 1, color = CORAL) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M0 0q-40-50-40-80a40 40 0 0 1 80 0q0 30-40 80z', fill: color }, g);
+  mk('circle', { cx: 0, cy: -80, r: 14, fill: '#fff' }, g);
+  return g;
+}
+// a round icon badge with an emoji and a caption
+function dwRound(p, emoji, cap, x, y, color, { r = 64, size = 50, capSize = 26 } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  mk('circle', { r, fill: '#fff', stroke: color, 'stroke-width': 4 }, g);
+  T(g, emoji, { y: size * .36, size, anchor: 'middle' });
+  if (cap) T(g, cap, { y: r + 36, size: capSize, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+// a ✗ cross over a point
+function dwCross(p, x, y, t0, color = DEAD, r = 26) {
+  const c = path(p, `M${x - r} ${y - r}L${x + r} ${y + r}M${x + r} ${y - r}L${x - r} ${y + r}`, { stroke: color, 'stroke-width': 7 }, { d: 0 }); draw(c, t0, .4); return c;
+}
+
+/* ---------- beats ---------- */
+const BEATS = [
+  ['intro', 'My Digital World', (m, D) => {
+    const p = panel(0);
+    const bg = mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: CORAL2 }, p); put(bg, { o: 0 }); tw(bg, { o: 1 }, 0, 1);
+    const g = G(p, { o: 0, y: 24 });
+    T(g, 'नवयान · दिवस १ · धडा ३ · Life Skills', { x: 800, y: 250, size: 26, fill: SAFF, weight: 700, anchor: 'middle' });
+    T(g, 'My Digital World', { x: 800, y: 420, size: 120, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    tw(g, { o: 1, y: 0 }, .3, 1.1, out);
+    const ph = dwPhone(p, 230, 330, 1.1); pop(ph, .6);
+    const lp = dwLaptop(p, 1360, 360, 1.1); pop(lp, .8);
+    const wf = dwWifi(p, 300, 700, 1); pop(wf, 1);
+    const wt = dwWatch(p, 1330, 690, .9); pop(wt, 1.2);
+    text(p, 'आपण technology कशी वापरतो?', 800, 560, m('sub'), { size: 40, fill: COL.dim, anchor: 'middle', font: SCRIPT, weight: 700 });
+  }],
+
+  ['morning', 'सकाळची पहिली गोष्ट', (m) => {
+    const p = panel(0);
+    title(p, 'सकाळी उठल्यावर तुम्ही सर्वात आधी काय करता?', .1, 100, CORAL);
+    ground(p, 720, .1);
+    // bed, boy sitting up, a window with the sun
+    const bed = G(p, { x: 430, y: 720, o: 0 });
+    mk('rect', { x: -220, y: -70, width: 440, height: 50, rx: 14, fill: '#fde68a', stroke: BARK, 'stroke-width': 3 }, bed);
+    mk('rect', { x: -230, y: -120, width: 24, height: 120, rx: 6, fill: BARK }, bed); mk('rect', { x: 206, y: -100, width: 24, height: 100, rx: 6, fill: BARK }, bed);
+    mk('rect', { x: -200, y: -94, width: 90, height: 30, rx: 10, fill: '#fff', stroke: '#d1d5db', 'stroke-width': 2 }, bed);
+    show(bed, .3, .5);
+    const b = boy(p, 330, 650, .95); show(b, .5, .5);
+    const win = G(p, { x: 150, y: 330, o: 0 });
+    mk('rect', { x: -90, y: -90, width: 180, height: 180, rx: 10, fill: '#bfe3ff', stroke: BARK, 'stroke-width': 5 }, win);
+    mk('path', { d: 'M0 -90v180M-90 0h180', stroke: BARK, 'stroke-width': 4 }, win);
+    mk('circle', { cx: 40, cy: -36, r: 26, fill: COL.sun }, win);
+    show(win, m('win'), .4); label(p, 'खिडकीबाहेर', 150, 460, m('win', .3), SKY, 24);
+    bubble(p, 'Good morning!', 480, 420, m('gm'), { w: 300, color: LIVE, size: 30, font: HEAD });
+    // the phone, big, next to the bed; the hand reaches for it
+    const ph = dwPhone(p, 1000, 480, 1.9); pop(ph, m('hand'));
+    const hand = path(p, 'M372 560q120 20 220 0', { stroke: '#f1c7a0', 'stroke-width': 12 }, { d: 0 }); draw(hand, m('hand', .2), .5);
+    const S_ = ph._scr;
+    // alarm: bell + 6:00; bell shakes, then fades when switched off
+    const clock = T(S_, '6:00', { y: -40, size: 40, fill: INK, weight: 800, anchor: 'middle', font: HEAD, o: 0 }); show(clock, m('alarm'));
+    const bell = G(S_, { y: 30, o: 0 });
+    mk('path', { d: 'M-22 10q0-36 22-36q22 0 22 36v10h-44z', fill: SAFF }, bell); mk('circle', { cy: 28, r: 6, fill: SAFF }, bell);
+    T(bell, 'Alarm', { y: 60, size: 18, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    show(bell, m('alarm'), .2); for (let i = 0; i < 5; i++) { tw(bell, { r: 14 }, m('alarm', .2 + i * .3), .15); tw(bell, { r: -14 }, m('alarm', .35 + i * .3), .15); } tw(bell, { r: 0 }, m('alarm', 1.7), .1); hide(bell, m('alarm', 2), .3);
+    const al = label(p, 'Alarm बंद', 1000, 760, m('alarm', .5), CORAL, 26);
+    // time: the clock grows
+    tw(clock, { s: 1.5, y: -10 }, m('time'), .5, back); hide(al, m('time'), .2); const tl = label(p, 'वेळ', 1000, 760, m('time', .3), CORAL, 26);
+    // a message pops
+    tw(clock, { s: 1, y: -70 }, m('msg'), .4);
+    const msgs = G(S_, { o: 0 });
+    [[-20, '#e5e7eb', 60], [20, SKY, 48]].forEach(([yy, c, w], i) => { mk('rect', { x: i ? 52 - w - 6 : -46, y: yy - 14, width: w, height: 28, rx: 12, fill: c }, msgs); });
+    T(msgs, 'message!', { y: 60, size: 18, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD }, msgs);
+    show(msgs, m('msg'), .3); hide(tl, m('msg'), .2); label(p, 'message', 1000, 760, m('msg', .3), CORAL, 26);
+    // scrolling feed while the clock runs 6:00 → 6:10
+    hide(msgs, m('scroll'), .3);
+    const feed = G(S_, { o: 0 }); const clipId = 'feedclip';
+    for (let i = 0; i < 14; i++) { mk('rect', { x: -44, y: -40 + i * 36, width: 88, height: 26, rx: 8, fill: i % 3 ? '#e5e7eb' : '#fecaca' }, feed); }
+    show(feed, m('scroll', .2), .3);
+    prog(q => { put(feed, { y: -q * 260 }); clock.textContent = '6:' + String(Math.min(10, Math.floor(q * 11))).padStart(2, '0'); }, m('scroll', .4), 3.2, lin);
+    note(p, '१० मिनिटं…', 1240, 400, m('scroll', 2.6), DEAD, 34);
+    bubble(p, 'अरे! मी इथे कशासाठी आलो होतो?', 560, 300, m('oops'), { w: 560, color: CORAL, size: 30 });
+  }],
+
+  ['everywhere', 'आपण technology चा वापर करतो', (m) => {
+    const p = panel(0);
+    title(p, 'आपण technology चा वापर करतो—', .1, 110, CORAL);
+    text(p, 'technology आपल्या आयुष्याचा एक भाग झाली आहे.', 800, 170, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const card = (i, mark, cap, drawer) => {
+      const x = 90 + i * 290;
+      const g = kcard(p, x, 230, 260, 360, CORAL); tw(g, { o: 1 }, m(mark), .4);
+      T(g, cap, { x: 140, y: 56, size: 34, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+      const d = drawer(g); show(d, m(mark, .2), .4);
+    };
+    card(0, 'school', 'शाळेत', g => dwBuilding(g, 140, 300, .85, { sign: 'SCHOOL', color: SKY }));
+    card(1, 'travel', 'प्रवासात', g => dwBus(g, 140, 310, .9));
+    card(2, 'hosp', 'रुग्णालयात', g => dwBuilding(g, 140, 300, .85, { sign: 'HOSPITAL', color: CORAL, icon: '✚' }));
+    card(3, 'bank', 'बँकेत', g => dwBuilding(g, 140, 300, .85, { sign: 'BANK', color: LIVE, icon: '₹' }));
+    card(4, 'pocket', 'खिशातही', g => { const b = boy(g, 110, 330, .9); const ph = mk('rect', { x: 8, y: -66, width: 18, height: 30, rx: 3, fill: INK }, b); return b; });
+    dwBanner(p, 'My Digital World', 800, 720, m('name'), { w: 720, size: 52 });
+    note(p, 'या नवीन जगाला आपण म्हणू शकतो—', 800, 630, m('name', -.6), COL.dim, 30, 0);
+  }],
+
+  ['digital', 'Digital म्हणजे काय?', (m) => {
+    const p = panel(0);
+    title(p, 'Digital म्हणजे काय?', .1, 100, CORAL);
+    ['Digital India', 'Digital payment', 'Digital education', 'Digital classroom'].forEach((s, i) => { const c = dwChip(p, s, 260 + i * 360, 190, CORAL, { size: 30, fill: CORAL2 }); pop(c, m('words', i * .9)); });
+    // definition: information flows through four steps
+    const flow = [['तयार करणे', '✎'], ['साठवणे', '🗄'], ['पाठवणे', '➤'], ['वापरणे', '👆']];
+    const info = dwChip(p, 'माहिती', 200, 320, INK, { size: 30, w: 170, fill: '#fff' }); pop(info, m('def'));
+    flow.forEach(([s, ic], i) => {
+      const x = 470 + i * 300;
+      dwArrow(p, x - 150 + (i ? 70 : 85), 320, x - 80, 320, m('def', .5 + i * .7), COL.dim, .3);
+      const g = dwRound(p, ic, s, x, 320, CORAL, { r: 46, size: 36, capSize: 26 }); pop(g, m('def', .8 + i * .7));
+    });
+    text(p, 'इलेक्ट्रॉनिक पद्धतीने  →  digital जगाचा भाग', 800, 440, m('def', 3.6), { size: 28, fill: COL.dim, anchor: 'middle', weight: 700 });
+    // examples along the bottom
+    const gl = ground(p, 700, m('photo', -.2), 100, 1500);
+    const ph = dwPhone(p, 330, 590, 1); pop(ph, m('photo'));
+    const flash = mk('circle', { cx: 330, cy: 590, r: 150, fill: COL.sun, opacity: .5 }, p); put(flash, { o: 0 }); tw(flash, { o: .6 }, m('photo', .5), .1); tw(flash, { o: 0 }, m('photo', .6), .4);
+    const photo = G(p, { x: 330, y: 500, o: 0 }); mk('rect', { x: -60, y: -46, width: 120, height: 92, rx: 8, fill: '#fff', stroke: SKY, 'stroke-width': 3 }, photo); mk('circle', { cx: -20, cy: -14, r: 12, fill: COL.sun }, photo); mk('path', { d: 'M-50 30l30-34l24 22l16-14l30 26z', fill: LIVE }, photo);
+    pop(photo, m('photo', .7)); label(p, 'photo', 330, 760, m('photo', .9), CORAL, 24);
+    // store: the photo shrinks into the phone screen
+    tw(photo, { x: 330, y: 580, s: .55 }, m('store'), .9, io);
+    const gal = G(ph._scr, { o: 0 }); for (let i = 0; i < 6; i++) mk('rect', { x: -40 + (i % 3) * 28, y: -70 + Math.floor(i / 3) * 28, width: 24, height: 24, rx: 4, fill: i ? '#e5e7eb' : SKY }, gal); show(gal, m('store', .9), .3);
+    label(p, 'साठतो', 330, 800, m('store', .8), COL.dim, 22);
+    const lp = dwLaptop(p, 800, 700, 1.1); pop(lp, m('doc'));
+    const doc = G(lp._scr, { o: 0 }); mk('rect', { x: -40, y: -100, width: 80, height: 80, rx: 4, fill: '#fff', stroke: '#9ca3af', 'stroke-width': 2 }, doc); [0, 1, 2, 3].forEach(i => mk('rect', { x: -30, y: -88 + i * 16, width: i === 3 ? 30 : 60, height: 6, rx: 3, fill: '#9ca3af' }, doc)); show(doc, m('doc', .4), .4);
+    label(p, 'document', 800, 760, m('doc', .5), CORAL, 24);
+    const ph2 = dwPhone(p, 1180, 590, .9); pop(ph2, m('upi')); const ph3 = dwPhone(p, 1440, 590, .9); pop(ph3, m('upi', .2));
+    const coin = G(p, { x: 1180, y: 560, o: 0, s: .6 }); mk('circle', { r: 28, fill: COL.sun, stroke: '#b45309', 'stroke-width': 3 }, coin); T(coin, '₹', { y: 12, size: 32, fill: '#78350f', weight: 800, anchor: 'middle' });
+    pop(coin, m('upi', .5)); tw(coin, { x: 1440, y: 520 }, m('upi', .8), .9, io); tw(coin, { y: 580, s: .4, o: 0 }, m('upi', 1.7), .4);
+    const tick = T(ph3._scr, '✓', { y: 20, size: 60, fill: LIVE, weight: 800, anchor: 'middle', o: 0 }); show(tick, m('upi', 2));
+    label(p, 'UPI', 1310, 760, m('upi', .6), CORAL, 24);
+    dwBanner(p, 'Digital world म्हणजे फक्त mobile नाही.', 800, 860, m('notonly'), { w: 900, size: 36 });
+  }],
+
+  ['q1', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-digital', prompt: ['Digital म्हणजे नेमकं काय?'],
+    build: choice([
+      ['माहिती इलेक्ट्रॉनिक पद्धतीने तयार करणे, साठवणे, पाठवणे किंवा वापरणे.'],
+      ['फक्त mobile.'],
+      ['फक्त internet वरचे video.'],
+      ['नवीन आणि महाग वस्तू.'],
+    ], 0, 'बरोबर! photo, document, UPI payment — सगळी माहिती इलेक्ट्रॉनिक पद्धतीने. हेच digital.', [
+      null,
+      'Digital world म्हणजे फक्त mobile नाही. computer वरचं document, UPI payment हेही digital.',
+      'Video हे एक उदाहरण आहे. माहिती तयार करणे, साठवणे, पाठवणे, वापरणे — हे सगळं digital.',
+      'किंमत किंवा नवेपणा नाही; माहिती इलेक्ट्रॉनिक पद्धतीने हाताळणे म्हणजे digital.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['technology', 'Technology म्हणजे काय?', (m) => {
+    const p = panel(0);
+    title(p, 'Technology म्हणजे काय?', .1, 100, CORAL);
+    const dc = kcard(p, 200, 150, 1200, 150, CORAL); tw(dc, { o: 1 }, m('def'), .5);
+    T(dc, 'माणसाने आपल्या गरजा पूर्ण करण्यासाठी तयार केलेली', { x: 600, y: 62, size: 32, fill: COL.chalk, weight: 700, anchor: 'middle' });
+    T(dc, 'साधनं · पद्धती · प्रणाली', { x: 600, y: 116, size: 36, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    ground(p, 640, m('walk', -.3));
+    // stage 1: a man walks from one village to the other
+    const h1 = dwHouse(p, 150, 640, .7); show(h1, m('walk'), .4); const h2 = dwHouse(p, 480, 640, .7); show(h2, m('walk'), .4);
+    const man = boy(p, 210, 640, .6); show(man, m('walk', .3), .3); tw(man, { x: 420 }, m('walk', .6), 2.4, lin);
+    for (let i = 0; i < 6; i++) { tw(man, { r: 4 }, m('walk', .6 + i * .4), .2); tw(man, { r: -4 }, m('walk', .8 + i * .4), .2); } tw(man, { r: 0 }, m('walk', 3), .1);
+    label(p, 'प्रत्यक्ष जाणे', 315, 700, m('walk', 1), COL.dim, 24);
+    // stage 2: letter
+    const lt = dwLetter(p, 760, 560, .8); pop(lt, m('letter')); tw(lt, { x: 800 }, m('letter', .3), .6, io); label(p, 'पत्र', 780, 700, m('letter', .4), COL.dim, 24);
+    // stage 3: telephone
+    const op = dwOldPhone(p, 1060, 640, .8); pop(op, m('phone')); label(p, 'telephone', 1060, 700, m('phone', .4), COL.dim, 24);
+    // stage 4: video call — a phone with a face on the screen
+    const vp = dwPhone(p, 1360, 540, .9); pop(vp, m('video'));
+    const face = G(vp._scr, { y: -20, o: 0 }); mk('circle', { r: 26, fill: '#f1c7a0' }, face); mk('path', { d: 'M-26 -6q4-26 26-26q22 0 26 26q-14-8-26-5q-12-3-26 5z', fill: '#2b2a33' }, face);
+    mk('circle', { cx: -8, cy: 0, r: 3, fill: INK }, face); mk('circle', { cx: 8, cy: 0, r: 3, fill: INK }, face); mk('path', { d: 'M-8 12q8 8 16 0', stroke: INK, 'stroke-width': 2.5, fill: 'none' }, face);
+    show(face, m('video', .3), .3); label(p, 'video call', 1360, 700, m('video', .4), COL.dim, 24);
+    [[315, 780], [800, 1060]].forEach(([a, b]) => 0);
+    dwArrow(p, 540, 590, 690, 590, m('letter', -.2), COL.faint, .3); dwArrow(p, 880, 590, 980, 590, m('phone', -.2), COL.faint, .3); dwArrow(p, 1150, 590, 1270, 590, m('video', -.2), COL.faint, .3);
+    // the need stays the same
+    const nb = dwBanner(p, 'गरज तीच: दूर असलेल्या व्यक्तीशी संपर्क', 800, 790, m('need'), { w: 1000, size: 36, sub: 'पण technology बदलत गेली →' });
+  }],
+
+  ['around', 'Look Around!', (m) => {
+    const p = panel(0);
+    title(p, 'Look Around!', .1, 100, CORAL);
+    ['Computer?', 'Mobile?', 'Internet?'].forEach((s, i) => { const c = dwChip(p, s, 440 + i * 360, 180, COL.dim, { size: 30 }); pop(c, m('think', i * .5)); });
+    // the room: a big outline on the left
+    const room = G(p, { o: 0 });
+    mk('rect', { x: 90, y: 250, width: 820, height: 480, rx: 16, fill: '#fffaf2', stroke: BARK, 'stroke-width': 5 }, room);
+    mk('path', { d: 'M90 640H910', stroke: COL.soil, 'stroke-width': 6 }, room);
+    T(room, 'तुमचं घर', { x: 500, y: 300, size: 30, fill: BARK, weight: 800, anchor: 'middle', font: HEAD });
+    show(room, m('home'), .5);
+    const tv = dwTv(p, 260, 640, 1); pop(tv, m('tv')); label(p, 'TV', 260, 690, m('tv', .3), CORAL, 26);
+    const mx = dwMixer(p, 470, 640, .9); pop(mx, m('mixer')); label(p, 'Mixer', 470, 690, m('mixer', .3), CORAL, 26);
+    const ph = dwPhone(p, 640, 560, .75); pop(ph, m('mobile')); label(p, 'Mobile', 640, 690, m('mobile', .3), CORAL, 26);
+    const wf = dwWifi(p, 800, 440, .8); pop(wf, m('wifi')); label(p, 'Wi-Fi', 800, 500, m('wifi', .3), CORAL, 26);
+    for (let i = 0; i < 3; i++) pulse(wf, m('wifi', .4 + i * .5), 1.12);
+    const wt = dwWatch(p, 820, 600, .4); pop(wt, m('watch')); label(p, 'smartwatch', 820, 690, m('watch', .3), CORAL, 24);
+    // hospital monitor with a heartbeat line
+    const hc = kcard(p, 960, 250, 560, 220, CORAL); tw(hc, { o: 1 }, m('hosp'), .4);
+    T(hc, 'Hospital', { x: 50, y: 50, size: 30, fill: CORAL, weight: 800, font: HEAD });
+    const mon = G(hc, { x: 300, y: 130 }); mk('rect', { x: -220, y: -50, width: 440, height: 100, rx: 10, fill: INK }, mon);
+    const hb = path(mon, 'M-200 0h60l16-30l24 60l24-70l20 40h60l16-30l24 60l24-70l20 40h92', { stroke: '#22c55e', 'stroke-width': 4 }, { d: 0 }); draw(hb, m('hosp', .4), 1.6);
+    T(hc, 'machines', { x: 480, y: 50, size: 26, fill: COL.dim, weight: 700, anchor: 'end' });
+    // traffic signal cycling
+    const sg = dwSignal(p, 1240, 760, 1); pop(sg, m('signal'));
+    [0, 1, 2, 0].forEach((k, i) => { sg._lights.forEach((l, j) => tw(l, { 'a_opacity': j === k ? 1 : .25 }, m('signal', .3 + i * .7), .2)); });
+    label(p, 'traffic signals', 1240, 800, m('signal', .4), CORAL, 26);
+    note(p, 'कधी मोठी… कधी इतकी छोटी की जाणीवही होत नाही', 600, 820, m('small'), SAFF, 32, 0);
+  }],
+
+  ['q2', 'छोटी तपासणी', () => {
+    const p = panel(0);
+    ground(p, 700, .1);
+    const items = [
+      ['tv', dwTv(p, 300, 700, 1.1), 'TV', [190, 540, 220, 200]],
+      ['mixer', dwMixer(p, 640, 700, 1.1), 'Mixer', [560, 520, 160, 220]],
+      ['cow', cow(p, 980, 700, 1), 'गाय', [880, 560, 220, 180]],
+      ['signal', dwSignal(p, 1330, 700, 1), 'traffic signal', [1270, 400, 120, 330]],
+    ];
+    items.forEach(([k, el, cap], i) => { show(el, .2 + i * .15, .4); label(p, cap, [300, 640, 980, 1330][i], 760, .4 + i * .15, i === 2 ? LIVE : CORAL, 26); });
+    S.q2 = items;
+  }, { ask: done => quiz({ x: 300, y: 40, w: 1000, cls: 'side', maxH: 320 }, [{
+    id: 'c-nottech', prompt: ['यातली कोणती गोष्ट technology <b>नाही</b>? तिच्यावर टॅप करा.'],
+    build: pickEls(S.q2.map(([k, el, cap, box]) => ({ el, box, label: cap })), 2,
+      'बरोबर! गाय माणसाने बनवलेली नाही; ती जिवंत आहे. TV, mixer, signal — ही माणसाने गरजेसाठी बनवलेली साधनं.',
+      i => ['TV माणसाने बनवला आहे, एका गरजेसाठी. ती technology आहे.', 'Mixer माणसाने बनवलेलं साधन आहे. ती technology आहे.', '', 'Traffic signal माणसाने रस्त्यावरील सुरक्षेसाठी बनवला. ती technology आहे.'][i]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['aarav', 'आरवचा एक दिवस', (m) => {
+    const p = panel(0);
+    title(p, 'आरवचा एक दिवस', .1, 100, CORAL);
+    // the day bar: dawn → night
+    const defs = mk('defs', {}, p); const gr = mk('linearGradient', { id: 'dayGrad', x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
+    mk('stop', { offset: 0, 'stop-color': '#fdba74' }, gr); mk('stop', { offset: .5, 'stop-color': '#bfe3ff' }, gr); mk('stop', { offset: 1, 'stop-color': COL.night }, gr);
+    const bar = mk('rect', { x: 150, y: 500, width: 1300, height: 18, rx: 9, fill: 'url(#dayGrad)' }, p); put(bar, { o: 0 }); show(bar, .3, .6);
+    const b = boy(p, 180, 500, .7); show(b, .6, .4);
+    const counter = G(p, { x: 1420, y: 170, o: 0 }); mk('circle', { r: 60, fill: '#fff', stroke: CORAL, 'stroke-width': 5 }, counter);
+    const num = T(counter, '0', { y: 18, size: 52, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD }); T(counter, 'technology', { y: 96, size: 24, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    show(counter, m('a1', -.3), .4);
+    const stops = [
+      ['a1', '6:00', 'alarm', g => { const ph = dwPhone(g, 0, 0, .5); put(ph, { o: 1 }); T(ph._scr, '⏰', { y: 14, size: 40, anchor: 'middle' }); return ph; }],
+      ['a2', '7:00', 'school bus ची वेळ', g => { const bs = dwBus(g, 0, 50, .5); put(bs, { o: 1 }); return bs; }],
+      ['a3', '10:00', 'computer lab', g => { const lp = dwLaptop(g, 0, 60, .5); put(lp, { o: 1 }); return lp; }],
+      ['a4', '12:00', 'projector · video', g => { const t = dwTv(g, 0, 60, .5); put(t, { o: 1 }); T(t._scr, '▶', { y: -58, size: 40, fill: INK, anchor: 'middle' }); return t; }],
+      ['a5', '2:00', 'message', g => { const bb = G(g, {}); mk('rect', { x: -110, y: -26, width: 220, height: 52, rx: 20, fill: SKY }, bb); T(bb, 'I will come home at 5.', { y: 8, size: 20, fill: '#fff', weight: 700, anchor: 'middle', font: HEAD }); return bb; }],
+      ['a6', '5:00', 'Google Maps', g => { const pin = dwPin(g, 0, 40, .6); put(pin, { o: 1 }); mk('path', { d: 'M-60 40q30-40 60-10t60-10', stroke: SKY, 'stroke-width': 5, fill: 'none', 'stroke-dasharray': '10 8' }, g); return pin; }],
+      ['a7', '9:30', 'alarm पुन्हा', g => { const ph = dwPhone(g, 0, 0, .5); put(ph, { o: 1 }); T(ph._scr, '⏰', { y: 14, size: 40, anchor: 'middle' }); mk('circle', { cx: 50, cy: -60, r: 16, fill: '#fde68a' }, g); return ph; }],
+    ];
+    stops.forEach(([mark, time, cap, drawer], i) => {
+      const x = 230 + i * 195, up = i % 2 === 0, t0 = m(mark);
+      tw(b, { x }, t0, .5, io);
+      const dotc = mk('circle', { cx: x, cy: 509, r: 12, fill: CORAL, stroke: '#fff', 'stroke-width': 3 }, p); put(dotc, { s: 0 }); pop(dotc, t0);
+      const g = G(p, { x, y: up ? 330 : 690, o: 0, s: .7 }); drawer(g); pop(g, t0 + .3);
+      const tl = T(p, time, { x, y: up ? 470 : 560, size: 22, fill: COL.dim, weight: 700, anchor: 'middle', o: 0 }); show(tl, t0 + .2);
+      const cl = T(p, cap, { x, y: up ? 240 : 790, size: 22, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD, o: 0 }); show(cl, t0 + .5);
+      prog(q => { if (q >= 1) num.textContent = String(i + 1); }, t0 + .4, .05, lin); pulse(counter, t0 + .4, 1.12);
+    });
+    note(p, 'एक दिवस. इतकी technology!', 800, 870, m('count'), SAFF, 36, 0);
+  }],
+
+  ['help', 'Technology can help us', (m) => {
+    const p = panel(0);
+    title(p, 'Technology can help us', .1, 100, CORAL);
+    text(p, 'अनेक कामं जलद झाली आहेत.', 800, 160, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const row = (y, mark1, mark2, before, after, capB, capA) => {
+      const c1 = kcard(p, 120, y, 560, 230, DEAD); tw(c1, { o: 1 }, m(mark1), .4); T(c1, 'पूर्वी', { x: 50, y: 48, size: 28, fill: DEAD, weight: 800, font: HEAD });
+      before(c1); const tb = T(c1, capB, { x: 300, y: 205, size: 24, fill: COL.dim, weight: 700, anchor: 'middle', o: 0 }); show(tb, m(mark1, .5));
+      dwArrow(p, 700, y + 115, 880, y + 115, m(mark2, -.2), CORAL, .4);
+      const c2 = kcard(p, 920, y, 560, 230, LIVE); tw(c2, { o: 1 }, m(mark2), .4); T(c2, 'आज', { x: 50, y: 48, size: 28, fill: LIVE, weight: 800, font: HEAD });
+      after(c2); const ta = T(c2, capA, { x: 300, y: 205, size: 24, fill: LIVE, weight: 700, anchor: 'middle', o: 0 }); show(ta, m(mark2, .5));
+    };
+    row(200, 'b1', 's1',
+      c => { [0, 1, 2, 3].forEach(i => { const bk = dwBook(c, 200 + i * 70, 130, .9, [SAFF, SKY, CORAL, PLUM][i]); put(bk, { o: 1, r: i % 2 ? 6 : -4 }); }); const by = boy(c, 470, 180, .55); show(by, m('b1', .2), .3); const qm = T(c, '?', { x: 500, y: 90, size: 40, fill: DEAD, weight: 800, o: 0 }); show(qm, m('b1', .4)); },
+      c => { const sb = G(c, { x: 300, y: 90 }); mk('rect', { x: -200, y: -24, width: 400, height: 48, rx: 24, fill: '#fff', stroke: LIVE, 'stroke-width': 3 }, sb); T(sb, 'search engine', { x: -170, y: 8, size: 22, fill: COL.dim, weight: 600 }); mk('circle', { cx: 160, cy: 0, r: 12, fill: 'none', stroke: LIVE, 'stroke-width': 3 }, sb); mk('path', { d: 'M168 8l12 12', stroke: LIVE, 'stroke-width': 3 }, sb);
+        [0, 1, 2].forEach(i => { const r = mk('rect', { x: 100, y: 128 + i * 20, width: 400 - i * 60, height: 10, rx: 5, fill: '#bbf7d0' }, c); put(r, { o: 0 }); show(r, m('s1', .4 + i * .2), .2); }); },
+      'पुस्तक शोधावं लागायचं', 'अनेक results, लगेच');
+    row(470, 'b2', 's2',
+      c => { const bk = dwBuilding(c, 170, 200, .55, { sign: 'BANK', color: DEAD, icon: '₹' }); put(bk, { o: 1 }); [0, 1, 2, 3].forEach(i => { const q = boy(c, 320 + i * 50, 200, .4); show(q, m('b2', .2 + i * .15), .2); }); },
+      c => { const ph = dwPhone(c, 300, 120, .55); put(ph, { o: 1 }); const tk = T(ph._scr, '₹ ✓', { y: 14, size: 44, fill: LIVE, weight: 800, anchor: 'middle', o: 0 }); show(tk, m('s2', .4)); },
+      'बँकेत रांग', 'digital payment');
+    const words = [['Learn', 'शिकायला'], ['Travel', 'प्रवास'], ['Work', 'काम'], ['Create', 'तयार करणं'], ['Solve problems', 'प्रश्न सोडवणं']];
+    words.forEach(([en, mr], i) => {
+      const x = 180 + i * 310, g = G(p, { x, y: 800, o: 0, s: .8 });
+      mk('rect', { x: -140, y: -44, width: 280, height: 88, rx: 20, fill: CORAL2, stroke: CORAL, 'stroke-width': 3 }, g);
+      T(g, en, { y: -4, size: 32, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD }); T(g, mr, { y: 30, size: 22, fill: COL.dim, weight: 700, anchor: 'middle' });
+      pop(g, m('l' + (i + 1)));
+    });
+  }],
+
+  ['always', 'पण technology नेहमीच चांगली असते का?', (m) => {
+    const p = panel(0);
+    title(p, 'पण technology नेहमीच चांगली असते का?', .1, 100, CORAL);
+    text(p, 'हा प्रश्न थोडा विचार करण्यासारखा आहे.', 800, 160, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    // one phone in the middle
+    const ph = dwPhone(p, 800, 470, 1.25); pop(ph, m('mobile'));
+    label(p, 'तोच एक mobile', 800, 660, m('mobile', .4), COL.dim, 24);
+    const side = (x, y, mark, color, head, cap, drawer) => {
+      const c = kcard(p, x, y, 460, 190, color); tw(c, { o: 1 }, m(mark), .4);
+      T(c, head, { x: 50, y: 48, size: 28, fill: color, weight: 800, font: HEAD });
+      drawer(c);
+      const t = T(c, cap, { x: 250, y: 168, size: 24, fill: COL.chalk, weight: 700, anchor: 'middle', o: 0 }); show(t, m(mark, .4));
+      dwArrow(p, x < 800 ? 690 : 910, 470, x < 800 ? x + 470 : x - 10, y + 95, m(mark, -.1), color, .3);
+    };
+    side(120, 220, 'edu', LIVE, 'शिकण्यासाठी', 'educational video', c => {
+      const t = dwTv(c, 250, 140, .55); show(t, m('edu', .2), .3); T(t._scr, '▶', { y: -58, size: 40, fill: LIVE, anchor: 'middle' });
+    });
+    side(1020, 220, 'random', DEAD, 'वेळ वाया', '५ तास random videos', c => {
+      for (let i = 0; i < 6; i++) { const r = mk('rect', { x: 150 + (i % 3) * 70, y: 70 + Math.floor(i / 3) * 40, width: 60, height: 32, rx: 6, fill: '#e5e7eb', stroke: DEAD, 'stroke-width': 2 }, c); put(r, { o: 0 }); show(r, m('random', .2 + i * .15), .2); }
+      const clk = T(c, '5 h', { x: 400, y: 120, size: 32, fill: DEAD, weight: 800, font: HEAD, anchor: 'middle', o: 0 }); show(clk, m('random', 1.2));
+    });
+    side(120, 500, 'sci', LIVE, 'internet वरून', 'science शिकता येतं', c => {
+      const bk = dwBook(c, 250, 110, 1.1, LIVE); show(bk, m('sci', .2), .3); const wf = dwWifi(c, 330, 120, .4, LIVE); show(wf, m('sci', .4), .3);
+    });
+    side(1020, 500, 'wrong', DEAD, 'पण…', 'चुकीची माहितीही ✗', c => {
+      const bb = G(c, { x: 250, y: 105, o: 0 }); mk('rect', { x: -140, y: -30, width: 280, height: 60, rx: 18, fill: '#f3f4f6', stroke: DEAD, 'stroke-width': 2 }, bb);
+      [0, 1].forEach(i => mk('rect', { x: -120, y: -14 + i * 18, width: i ? 160 : 240, height: 8, rx: 4, fill: '#9ca3af' }, bb)); show(bb, m('wrong', .2), .3);
+      dwCross(c, 250, 105, m('wrong', .7), CORAL, 30);
+    });
+    dwBanner(p, 'How do we use it?', 800, 790, m('use'), { w: 900, size: 44, sub: 'आपण technology कशी वापरतो, हे महत्त्वाचं.' });
+  }],
+
+  ['q3', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-use', prompt: ['Technology चांगली की वाईट?'],
+    build: choice([
+      ['नेहमी चांगली.'],
+      ['नेहमी वाईट.'],
+      ['ती स्वतः चांगली किंवा वाईट नाही; आपण ती कशी वापरतो हे महत्त्वाचं.'],
+      ['फक्त मोठ्यांसाठी चांगली.'],
+    ], 2, 'बरोबर! त्याच mobile वर educational video किंवा पाच तास random videos. How do we use it?', [
+      'त्याच mobile वर पाच तास random videos पाहता येतात. नेहमी चांगली नाही.',
+      'त्याच internet वरून science शिकता येतं. नेहमी वाईट नाही.',
+      null,
+      'वय नाही, वापर महत्त्वाचा. आरवही technology चांगल्या कामासाठी वापरतो.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['resp', 'Digital Responsibility', (m) => {
+    const p = panel(0);
+    title(p, 'Digital Responsibility', .1, 100, CORAL);
+    // the road on the left: a car drives up to a signal and stops at red
+    const road = G(p, { o: 0 });
+    mk('rect', { x: 100, y: 440, width: 820, height: 90, rx: 10, fill: '#4b5563' }, road);
+    mk('path', { d: 'M120 485H900', stroke: '#fde68a', 'stroke-width': 4, 'stroke-dasharray': '30 24' }, road);
+    show(road, m('road'), .4);
+    text(p, 'रस्त्यावर काही नियम पाळतो', 510, 420, m('road', .3), { size: 26, fill: COL.dim, anchor: 'middle', weight: 700 });
+    const cr = car(p, 220, 520, .9); show(cr, m('road', .3), .3);
+    tw(cr, { x: 620 }, m('road', .6), Math.max(.8, m('red') - m('road', .6)), out);
+    const sg = dwSignal(p, 780, 530, .95); show(sg, m('road', .2), .3);
+    tw(sg._lights[0], { a_opacity: 1 }, m('red'), .2);
+    label(p, 'Red signal → थांबतो', 450, 580, m('red', .4), CORAL, 26);
+    // the shield: the same rules in the digital world
+    const sh = dwShield(p, 1240, 400, 1); pop(sh, m('digital'));
+    text(p, 'digital world मध्येही', 1240, 560, m('digital', .4), { size: 26, fill: COL.dim, anchor: 'middle', weight: 700 });
+    text(p, 'आपली जबाबदारी आहे', 1240, 598, m('digital', .6), { size: 28, fill: CORAL, anchor: 'middle', weight: 800, font: HEAD });
+    // three rules with a cross
+    [['r1', 'दुसऱ्याचा password चोरू नये'], ['r2', 'कोणाची personal photo परवानगीशिवाय share करू नये'], ['r3', 'चुकीची माहिती पसरवू नये']].forEach(([mark, str], i) => {
+      const y = 640 + i * 60;
+      const g = kcard(p, 200, y - 26, 1200, 52, CORAL, { fill: CORAL2 }); tw(g, { o: 1 }, m(mark), .3);
+      T(g, str, { x: 90, y: 35, size: 28, fill: COL.chalk, weight: 700 });
+      dwCross(p, 250, y, m(mark, .3), CORAL, 14);
+    });
+    dwBanner(p, 'Digital Responsibility', 800, 822, m('name'), { w: 760, size: 40 });
+  }],
+
+  ['english', 'आजचे English शब्द', (m) => {
+    const p = panel(0);
+    title(p, 'आजचे English शब्द', .1, 100, CORAL);
+    text(p, 'मोठ्याने बोला.', 800, 150, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    [['Digital', 'इलेक्ट्रॉनिक पद्धतीने', 'e1', g => dwPhone(g, 1080, 55, .4)],
+     ['Technology', 'माणसाने बनवलेली साधनं', 'e2', g => dwLaptop(g, 1080, 90, .45)],
+     ['Digital Responsibility', 'digital जगातली जबाबदारी', 'e3', g => dwShield(g, 1080, 60, .4)],
+     ['How do we use it?', 'आपण ते कसं वापरतो?', 'e4', g => { const q = T(g, '?', { x: 1080, y: 80, size: 70, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD, o: 0 }); return q; }],
+     ['I will come home at 5.', 'मी पाच वाजता घरी येईन.', 'e5', g => { const bb = G(g, { x: 1080, y: 55, o: 0 }); mk('rect', { x: -70, y: -24, width: 140, height: 48, rx: 18, fill: SKY }, bb); T(bb, '5:00', { y: 9, size: 24, fill: '#fff', weight: 800, anchor: 'middle', font: HEAD }); return bb; }],
+    ].forEach(([en, mr, mark, drawer], i) => {
+      const g = kcard(p, 200, 190 + i * 130, 1200, 110, CORAL); tw(g, { o: 1 }, m(mark), .4);
+      T(g, en, { x: 60, y: 50, size: 38, fill: CORAL, weight: 800, font: HEAD });
+      T(g, mr, { x: 60, y: 90, size: 26, fill: COL.chalk, weight: 600 });
+      const d = drawer(g); if (d) show(d, m(mark, .3), .4);
+    });
+  }],
+
+  ['activity', 'My Digital World — Activity', (m) => {
+    const p = panel(0);
+    title(p, 'My Digital World — Activity', .1, 100, CORAL);
+    text(p, 'घरात किंवा शाळेत वापरल्या जाणाऱ्या दहा technologies शोधा.', 800, 155, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    // the notebook
+    const nb = G(p, { o: 0 });
+    mk('rect', { x: 100, y: 190, width: 700, height: 640, rx: 14, fill: '#fff', stroke: BARK, 'stroke-width': 4 }, nb);
+    for (let i = 0; i < 8; i++) mk('circle', { cx: 100, cy: 230 + i * 80, r: 9, fill: '#fff', stroke: BARK, 'stroke-width': 3 }, nb);
+    const lines = [];
+    for (let i = 0; i < 10; i++) { const l = path(nb, `M160 ${260 + i * 58}H760`, { stroke: COL.faint, 'stroke-width': 3 }, { d: 0 }); lines.push(l); T(nb, String(i + 1) + '.', { x: 150, y: 252 + i * 58, size: 22, fill: COL.dim, weight: 700, anchor: 'end' }); }
+    show(nb, .4, .5); lines.forEach((l, i) => draw(l, .6 + i * .08, .3));
+    T(nb, 'उदाहरण:', { x: 170, y: 232, size: 22, fill: CORAL, weight: 800, font: HEAD });
+    ['TV', 'mobile', 'mixer', 'fan'].forEach((s, i) => { const c = dwChip(p, s, 300, 240 + i * 58, CORAL, { size: 26, h: 42, fill: CORAL2 }); pop(c, m('ex', .5 + i * .8)); });
+    for (let i = 4; i < 10; i++) tw(lines[i], { 'c_stroke': CORAL }, m('lines', (i - 4) * .12), .3);
+    const ln = note(p, 'दहा गोष्टी वहीत लिहा', 560, 600, m('lines', .4), SAFF, 32, -4);
+    ln.insertBefore(mk('rect', { x: -190, y: -34, width: 380, height: 50, rx: 12, fill: '#fff', opacity: .92 }, ln), ln.firstChild);
+    // one technology → which task becomes easy?
+    const ec = kcard(p, 880, 190, 620, 170, CORAL); tw(ec, { o: 1 }, m('easy'), .4);
+    T(ec, 'यापैकी एक technology →', { x: 60, y: 60, size: 30, fill: CORAL, weight: 800, font: HEAD });
+    T(ec, 'तुमचं कोणतं काम सोपं करते?', { x: 60, y: 110, size: 28, fill: COL.chalk, weight: 700 });
+    const ar = dwArrow(p, 800, 300, 880, 275, m('easy', .3), CORAL, .3);
+    // today's challenge
+    const ch = kcard(p, 880, 400, 620, 430, SAFF, { fill: '#fffbeb' }); tw(ch, { o: 1 }, m('chal'), .4);
+    T(ch, "TODAY'S CHALLENGE", { x: 310, y: 58, size: 34, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD });
+    T(ch, 'आजची तीन छोटी कामं', { x: 310, y: 96, size: 24, fill: COL.dim, weight: 700, anchor: 'middle' });
+    [['c1', 'Science', 'आजूबाजूला ५ living आणि ५ non-living गोष्टी शोधा.', LIVE],
+     ['c2', 'English', 'पुस्तक बंद करून १ मिनिट स्वतःबद्दल English मध्ये बोला.', PLUM],
+     ['c3', 'Digital World', 'घरात / शाळेत वापरल्या जाणाऱ्या १० technologies लिहा.', CORAL]].forEach(([mark, head, str, color], i) => {
+      const g = G(ch, { x: 40, y: 150 + i * 96, o: 0 });
+      mk('circle', { cx: 22, cy: 10, r: 22, fill: color }, g); T(g, String(i + 1), { x: 22, y: 19, size: 24, fill: '#fff', weight: 800, anchor: 'middle' });
+      T(g, head, { x: 60, y: 6, size: 28, fill: color, weight: 800, font: HEAD });
+      T(g, str, { x: 60, y: 42, size: 21, fill: COL.chalk, weight: 600 });
+      tw(g, { o: 1 }, m(mark), .4);
+    });
+  }],
+
+  ['together', 'आता तिन्ही गोष्टी एकत्र करूया…', (m) => {
+    const p = panel(0);
+    title(p, 'आता तिन्ही गोष्टी एकत्र करूया…', .1, 100, CORAL);
+    text(p, 'आज सकाळी आपण काय केलं?', 800, 155, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    [['s1', 't1', LIVE, 'Science', ['जगाकडे पाहिलं.', 'जीवन शोधलं.'], ['हे असं का होतं?']],
+     ['s2', 't2', PLUM, 'English', ['स्वतःबद्दल English', 'मध्ये बोललो.'], ['मी माझा विचार', 'कसा व्यक्त करू?']],
+     ['s3', 't3', CORAL, 'Life Skills', ['आपल्या digital', 'जगाकडे पाहिलं.'], ['मी माझ्या जगाचा', 'वापर कसा करतो?']]].forEach(([ms, mt, color, head, did, q], i) => {
+      const x = 80 + i * 490;
+      const c = kcard(p, x, 190, 460, 330, color); tw(c, { o: 1 }, m(ms), .4);
+      T(c, head, { x: 230, y: 60, size: 36, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+      did.forEach((s, j) => { const t = T(c, s, { x: 230, y: 104 + j * 32, size: 24, fill: COL.dim, weight: 700, anchor: 'middle', o: 0 }); show(t, m(ms, .3 + j * .2)); });
+      const qb = G(c, { x: 230, y: 240, o: 0, s: .8 });
+      mk('rect', { x: -200, y: -50, width: 400, height: 110, rx: 18, fill: '#fff', stroke: color, 'stroke-width': 3 }, qb);
+      q.forEach((s, j) => T(qb, s, { y: (q.length === 1 ? 14 : -4) + j * 40, size: 30, fill: color, weight: 700, anchor: 'middle', font: SCRIPT }));
+      pop(qb, m(mt));
+    });
+    note(p, 'हे तीन प्रश्न पुढच्या संपूर्ण learning journey मध्ये आपल्यासोबत राहतील.', 800, 560, m('t3', 7.5), SAFF, 28, 0);
+    // reflection
+    const rc = kcard(p, 200, 600, 1200, 280, CORAL, { fill: CORAL2 }); tw(rc, { o: 1 }, m('refl'), .4);
+    T(rc, 'DAY 1 REFLECTION', { x: 60, y: 50, size: 30, fill: CORAL, weight: 800, font: HEAD });
+    T(rc, 'आज रात्री झोपण्यापूर्वी स्वतःला विचारा', { x: 1140, y: 50, size: 24, fill: COL.dim, weight: 700, anchor: 'end' });
+    ['आज मी काय पाहिलं?', 'आज मला कोणता प्रश्न पडला?', 'आज मी English मध्ये कोणतं वाक्य बोलू शकतो/शकते?', 'आज मला technology बद्दल काय नवीन कळलं?', 'आणि सर्वात महत्त्वाचं— आज मी काय नवीन शोधलं?'].forEach((s, i) => {
+      const t = T(rc, '• ' + s, { x: 70 + (i > 2 ? 580 : 0), y: 100 + (i > 2 ? i - 3 : i) * 44 + (i > 2 ? 0 : 0), size: 24, fill: i === 4 ? CORAL : COL.chalk, weight: i === 4 ? 800 : 600, o: 0 });
+      show(t, m('refl', [4.4, 6.7, 8.2, 8.6, 9.7][i]));
+    });
+  }],
+
+  ['last', 'एक शेवटचा विचार…', (m) => {
+    const p = panel(0);
+    title(p, 'एक शेवटचा विचार…', .1, 100, CORAL);
+    const items = [
+      [0, 'Digital world', 'बाहेर कुठेतरी नाही', 'आपल्या घरात आहे', CORAL, g => { const h = dwHouse(g, 0, 60, .6); put(h, { o: 1 }); return h; }],
+      [6.4, 'Science', 'फक्त पुस्तकात नाही', 'आपल्या आजूबाजूला आहे', LIVE, g => { const b = dwBook(g, 0, 0, 1.3, LIVE); put(b, { o: 1 }); return b; }],
+      [12.5, 'English', 'फक्त परीक्षेसाठी नाही', 'व्यक्त होण्याची नवी शक्ती', PLUM, g => { const e = G(g, {}); mk('rect', { x: -50, y: -60, width: 100, height: 120, rx: 6, fill: '#fff', stroke: PLUM, 'stroke-width': 3 }, e); [0, 1, 2, 3].forEach(i => mk('rect', { x: -36, y: -40 + i * 22, width: i === 3 ? 40 : 72, height: 8, rx: 4, fill: '#d1d5db' }, e)); T(e, 'A+', { x: 24, y: 48, size: 26, fill: PLUM, weight: 800, font: HEAD, anchor: 'middle' }); return e; }],
+      [20.3, 'Learning', 'फक्त शाळेच्या वर्गात नाही', 'पाहणं · विचारणं · विचार करणं', SAFF, g => { const b = G(g, {}); mk('rect', { x: -80, y: -60, width: 160, height: 100, rx: 8, fill: '#1f3b2f', stroke: BARK, 'stroke-width': 5 }, b); mk('path', { d: 'M-56 -30h80M-56 -6h110M-56 18h60', stroke: '#fff', 'stroke-width': 4, opacity: .8 }, b); return b; }],
+    ];
+    items.forEach(([off, head, no, yes, color, drawer], i) => {
+      const x = 240 + i * 373, t0 = m('home', off);
+      const c = kcard(p, x - 170, 180, 340, 380, color); tw(c, { o: 1 }, t0, .4);
+      T(c, head, { x: 170, y: 50, size: 32, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+      const g = G(c, { x: 170, y: 170, o: 0 }); drawer(g); pop(g, t0 + .3);
+      dwCross(c, 170, 170, t0 + 1.2, DEAD, 44);
+      const tn = T(c, no, { x: 170, y: 290, size: 24, fill: DEAD, weight: 700, anchor: 'middle', o: 0 }); show(tn, t0 + .8);
+      const ty = T(c, '→ ' + yes, { x: 170, y: 340, size: 24, fill: color, weight: 800, anchor: 'middle', o: 0 }); show(ty, t0 + 2.6);
+    });
+    dwBanner(p, 'Learning starts when you start looking, asking and thinking.', 800, 650, m('quote'), { w: 1360, size: 34 });
+    // zoom into the tree: the cell
+    const tr = tree(p, 520, 880, .6); show(tr, m('cell'), .4);
+    const lens = G(p, { x: 520, y: 790, o: 0, s: .5 }); mk('circle', { r: 60, fill: 'none', stroke: INK, 'stroke-width': 6 }, lens); mk('path', { d: 'M42 42l40 40', stroke: INK, 'stroke-width': 8, 'stroke-linecap': 'round' }, lens);
+    pop(lens, m('cell', 3.8)); tw(lens, { x: 1000, y: 800, s: 1 }, m('cell', 6.4), 1, io);
+    const cell = G(p, { x: 1000, y: 800, o: 0, s: .4 });
+    mk('ellipse', { rx: 54, ry: 44, fill: '#e9f8ee', stroke: LIVE, 'stroke-width': 4 }, cell); mk('circle', { cx: 10, cy: -4, r: 14, fill: LIVE }, cell);
+    for (let i = 0; i < 6; i++) mk('circle', { cx: Math.cos(i) * 36, cy: Math.sin(i * 1.3) * 26, r: 4, fill: SAFF }, cell);
+    tw(cell, { o: 1, s: 1 }, m('cell', 7.4), .6, back);
+    note(p, 'इतकं आत, की डोळ्यांना दिसणारही नाही', 250, 830, m('cell', 9.2), COL.dim, 24, -3);
+    text(p, 'The Cell · पेशी', 1090, 812, m('cell', 13.8), { size: 34, fill: LIVE, weight: 800, font: HEAD });
+  }],
+
+  ['wrap', 'आज आपण काय शिकलो?', (m) => {
+    const p = panel(0);
+    title(p, 'आज आपण काय शिकलो?', .1, 100, CORAL);
+    [['Digital = माहिती इलेक्ट्रॉनिक पद्धतीने तयार करणे · साठवणे · पाठवणे · वापरणे.', 'w1', CORAL],
+     ['Technology = गरजांसाठी माणसाने बनवलेली साधनं. गरज तीच, साधनं बदलतात.', 'w2', SKY],
+     ['चांगली की वाईट? आपण ती कशी वापरतो, यावर ठरतं.', 'w3', LIVE],
+     ['Digital Responsibility: password, photo, चुकीची माहिती — जबाबदारीने.', 'w4', SAFF]].forEach(([str, mark, color], i) => {
+      const g = G(p, { x: -16, y: 230 + i * 120, o: 0 });
+      mk('circle', { cx: 160, cy: -12, r: 28, fill: color }, g);
+      T(g, String(i + 1), { x: 160, y: -1, size: 28, fill: '#fff', weight: 800, anchor: 'middle' });
+      T(g, str, { x: 214, size: 30, weight: 700 });
+      tw(g, { o: 1, x: 0 }, m(mark), .6);
+    });
+    note(p, 'आता धड्याचा सराव करूया.', 800, 780, m('end'), SAFF, 34, 0);
+  }],
+
+  ['final1', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-resp', prompt: ['प्रत्येक कृती जबाबदारीची आहे की नाही?'],
+    build: grid([
+      { parts: ['मित्राचा password घेऊन त्याच्या account मध्ये जाणे'], ans: ['no'], why: 'दुसऱ्याचा password चोरू नये. ही Digital Responsibility नाही.' },
+      { parts: ['photo share करण्याआधी मैत्रिणीला विचारणे'], ans: ['ok'], why: 'परवानगी घेणे ही जबाबदारी. personal photo परवानगीशिवाय share करू नये.' },
+      { parts: ['forward आलेली बातमी न तपासता पुढे पाठवणे'], ans: ['no'], why: 'न तपासता पाठवली तर चुकीची माहिती पसरते.' },
+      { parts: ['project साठी search engine वर माहिती शोधणे'], ans: ['ok'], why: 'Technology can help us — Learn. हा चांगला वापर.' },
+      { parts: ['एक video म्हणून उघडून पाच तास random videos पाहणे'], ans: ['no'], why: 'तोच mobile, पण वेळ वाया. How do we use it?' },
+      { parts: ['आईला message: "I will come home at 5."'], ans: ['ok'], why: 'आरवसारखं — एका गरजेसाठी technology चा वापर.' },
+    ], RESP, { multi: false, text: true }),
+  }], done, 'धड्याचा सराव   १ पैकी २') }],
+
+  ['final2', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-tech', prompt: ['Technology म्हणजे काय?'],
+    build: choice([
+      ['फक्त computer आणि mobile.'],
+      ['माणसाने आपल्या गरजा पूर्ण करण्यासाठी तयार केलेली साधनं, पद्धती आणि प्रणाली.'],
+      ['जी वस्तू विजेवर चालते ती.'],
+      ['फक्त internet.'],
+    ], 1, 'बरोबर! पत्र, telephone, video call — गरज तीच, साधनं बदलली. हीच technology.', [
+      'Mixer, traffic signal, पत्रही technology आहे. फक्त computer आणि mobile नाही.',
+      null,
+      'पत्र विजेवर चालत नाही, तरी ती बातमी पाठवण्याची technology होती.',
+      'Internet हे एक साधन आहे. Technology त्यापेक्षा खूप मोठी आहे.',
+    ]),
+  }], done, 'धड्याचा सराव   २ पैकी २') }],
+
+  ['finish', 'पूर्ण', () => { panel(0); }, { ask: finishCard }],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+// used only inside the final1 ask closure
+const RESP = [['ok', 'जबाबदारीची', LIVE], ['no', 'नाही', DEAD]];
+
+boot();
+</script>
+</body>
+</html>

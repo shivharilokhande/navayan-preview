@@ -36,7 +36,7 @@ const BOOK = {
      "title": "My Digital World",
      "subject": "life",
      "subjectName": "जीवनकौशल्य",
-     "ready": false,
+     "ready": true,
      "minutes": 13,
      "pages": [
       17,
@@ -54,8 +54,8 @@ const BOOK = {
      "title": "Why Do We Need Numbers?",
      "subject": "math",
      "subjectName": "गणित",
-     "ready": false,
-     "minutes": null,
+     "ready": true,
+     "minutes": 11,
      "pages": [
       22,
       27

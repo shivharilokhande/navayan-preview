@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>६ · Knowing Myself</title>
+<link rel="stylesheet" href="../lib/engine.css">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js"></script>
+<script src="audio/mr/timings.js"></script>
+<script>
+'use strict';
+const CHAPTER = { number: 6, title: 'Knowing Myself', minutes: 14, language: 'mr' };
+
+/* ---------- palette roles ---------- */
+const CORAL = '#e0524d', SKY = COL.whole, LIVE = COL.leaf, SAFF = COL.int, PLUM = COL.irr, DEAD = COL.stone, BARK = COL.bark;
+const CORAL2 = '#fff1f0';   // pale coral card fill
+const INK = '#2b2a33';
+const GOLD = '#d8a03a';
+
+/* ---------- text helpers (as in ch01 / ch03) ---------- */
+const text = (p, str, x, y, t0, { size = 32, fill = COL.chalk, anchor = 'start', weight = 500, font = UI } = {}) => {
+  const e = T(p, str, { x, y, size, fill, anchor, weight, font, o: 0 }); show(e, t0); return e;
+};
+const title = (p, str, t0 = .1, y = 120, fill = CORAL) => text(p, str, 800, y, t0, { size: 54, weight: 800, anchor: 'middle', font: HEAD, fill });
+const note = (p, str, x, y, t0, fill = SAFF, size = 36, r = -3) => {
+  const g = G(p, { x, y, o: 0, r }); T(g, str, { size, fill, font: SCRIPT, weight: 700, anchor: 'middle' }); show(g, t0); return g;
+};
+function label(p, str, x, y, t0, color = COL.chalk, size = 26) { return text(p, str, x, y, t0, { size, fill: color, anchor: 'middle', weight: 700 }); }
+function bubble(p, str, x, y, t0, { w = 420, color = SAFF, size = 30, font = UI, fill = '#fff', tc = COL.chalk } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  mk('path', { d: `M${-w / 2} -40h${w}a16 16 0 0 1 16 16v56a16 16 0 0 1-16 16h${-w / 2 + 40}l-24 26v-26h${-w / 2 + 8}a16 16 0 0 1-16-16v-56a16 16 0 0 1 16-16z`, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 12, size, fill: tc, weight: 600, anchor: 'middle', font });
+  pop(g, t0); return g;
+}
+function kcard(p, x, y, w, h, color, { o = 0, s = 1, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o, s });
+  mk('rect', { x: 0, y: 0, width: w, height: h, rx: 22, fill, stroke: COL.edge || '#f1e4d0', 'stroke-width': 2 }, g);
+  mk('path', { d: `M22 0h-4a18 18 0 0 0-18 18v${h - 36}a18 18 0 0 0 18 18h4z`, fill: color }, g);
+  return g;
+}
+// pill banner centred on (x,y)
+function dwBanner(p, str, x, y, t0, { w = 760, color = CORAL, size = 40, fill = '#fff', sub } = {}) {
+  const g = G(p, { x, y, o: 0, s: .8 });
+  mk('rect', { x: -w / 2, y: -46, width: w, height: sub ? 120 : 92, rx: 46, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: sub ? 2 : 14, size, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  if (sub) T(g, sub, { y: 52, size: 26, fill: COL.dim, weight: 600, anchor: 'middle' });
+  pop(g, t0); return g;
+}
+// word chip (rounded box) centred on (x,y)
+function dwChip(p, str, x, y, color, { size = 32, w, h = 64, fill = '#fff', font = HEAD, tc } = {}) {
+  const ww = w || Math.max(90, Math.round(str.length * size * .56) + 44);
+  const g = G(p, { x, y, o: 0, s: .8 });
+  g._rect = mk('rect', { x: -ww / 2, y: -h / 2, width: ww, height: h, rx: 16, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: size * .36, size, fill: tc || color, weight: 800, anchor: 'middle', font });
+  g._w = ww; return g;
+}
+const ground = (p, y = 700, t0 = .1, x0 = 80, x1 = 1520) => { const l = path(p, `M${x0} ${y}H${x1}`, { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(l, t0, 1); return l; };
+// a stroked arrow from (x0,y0) to (x1,y1), drawn on
+function dwArrow(p, x0, y0, x1, y1, t0, color = COL.dim, dur = .5) {
+  const a = path(p, `M${x0} ${y0}L${x1} ${y1}`, { stroke: color, 'stroke-width': 5 }, { d: 0 }); draw(a, t0, dur);
+  const ang = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
+  const h = mk('path', { d: 'M-16 -12L0 0L-16 12', stroke: color, 'stroke-width': 5, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, p);
+  put(h, { x: x1, y: y1, r: ang, o: 0 }); show(h, t0 + dur, .2); return a;
+}
+// a ✗ cross over a point
+function dwCross(p, x, y, t0, color = DEAD, r = 26) {
+  const c = path(p, `M${x - r} ${y - r}L${x + r} ${y + r}M${x + r} ${y - r}L${x - r} ${y + r}`, { stroke: color, 'stroke-width': 7 }, { d: 0 }); draw(c, t0, .4); return c;
+}
+// a round icon badge with an emoji and a caption
+function dwRound(p, emoji, cap, x, y, color, { r = 64, size = 50, capSize = 26, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  g._ring = mk('circle', { r, fill, stroke: color, 'stroke-width': 4 }, g);
+  T(g, emoji, { y: size * .36, size, anchor: 'middle' });
+  if (cap) T(g, cap, { y: r + 36, size: capSize, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+function dwBook(p, x, y, s = 1, color = SAFF) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -40, y: -30, width: 80, height: 60, rx: 6, fill: color, stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M0 -30v60', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-30 -14h20M-30 0h20M10 -14h20M10 0h20', stroke: '#fff', 'stroke-width': 3, opacity: .7 }, g);
+  return g;
+}
+
+/* ---------- drawn people (from ch01), around (0,0) on the baseline ---------- */
+function boy(p, x, y, s = 1, shirt = SKY) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -22, y: -120, width: 44, height: 70, rx: 14, fill: shirt }, g);
+  mk('rect', { x: -20, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g); mk('rect', { x: 3, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g);
+  mk('circle', { cx: 0, cy: -146, r: 30, fill: '#f1c7a0' }, g);
+  mk('path', { d: 'M-30 -152q4-30 30-30q26 0 30 30q-18-10-30-6q-12-4-30 6z', fill: '#2b2a33' }, g);
+  mk('circle', { cx: -10, cy: -148, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 10, cy: -148, r: 3.5, fill: COL.chalk }, g);
+  g._mouth = mk('path', { d: 'M-9 -134q9 8 18 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  g._arms = mk('path', { d: 'M-22 -108l-18 30M22 -108l18 30', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+  return g;
+}
+// a tiny classmate: head + body, varied hair / shirt; around (0,0) on the baseline
+function kmKid(p, x, y, shirt, hair, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -16, y: -70, width: 32, height: 46, rx: 10, fill: shirt }, g);
+  mk('circle', { cx: 0, cy: -88, r: 19, fill: '#f1c7a0' }, g);
+  mk('path', { d: hair === 'long' ? 'M-20 -92q4-22 20-22q16 0 20 22v22h-6v-20q-14-6-28 0v20h-6z' : hair === 'curly' ? 'M-21 -90q0-26 21-26q21 0 21 26q-10-8-21-6q-11-2-21 6z' : 'M-19 -94q3-18 19-18q16 0 19 18q-10-6-19-4q-9-2-19 4z', fill: hair === 'brown' ? '#6b4f3a' : '#2b2a33' }, g);
+  mk('circle', { cx: -6, cy: -88, r: 2.2, fill: INK }, g); mk('circle', { cx: 6, cy: -88, r: 2.2, fill: INK }, g);
+  mk('path', { d: 'M-5 -80q5 5 10 0', stroke: INK, 'stroke-width': 1.8, fill: 'none', 'stroke-linecap': 'round' }, g);
+  return g;
+}
+// an oval hand mirror: gold frame, pale glass; g._in is a clipped group inside the glass (±70 × ±100)
+function kmMirror(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('ellipse', { rx: 86, ry: 116, fill: GOLD }, g);
+  mk('rect', { x: -14, y: 100, width: 28, height: 90, rx: 10, fill: GOLD }, g);
+  mk('ellipse', { rx: 70, ry: 100, fill: '#dff1ff' }, g);
+  const cid = 'kmclip' + (++kmMirror.n);
+  const cp = mk('clipPath', { id: cid }, g); mk('ellipse', { rx: 70, ry: 100 }, cp);
+  const wrap = mk('g', { 'clip-path': `url(#${cid})` }, g);
+  g._in = G(wrap, {});
+  mk('path', { d: 'M-40 -70q10-30 40-40', stroke: '#fff', 'stroke-width': 8, fill: 'none', 'stroke-linecap': 'round', opacity: .8 }, g);
+  return g;
+}
+kmMirror.n = 0;
+// a luggage-style name tag centred on (0,0): grey card with a hole and a string
+function kmTag(p, str, x, y, color = DEAD, { w = 300, r = -6 } = {}) {
+  const g = G(p, { x, y, o: 0, s: .8, r });
+  mk('path', { d: `M${-w / 2} -30h${w - 40}l40 30l-40 30h${-(w - 40)}z`, fill: '#f3f4f6', stroke: color, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  mk('circle', { cx: w / 2 - 22, cy: 0, r: 6, fill: '#fff', stroke: color, 'stroke-width': 2 }, g);
+  T(g, str, { x: -20, y: 9, size: 24, fill: INK, weight: 700, anchor: 'middle' });
+  return g;
+}
+// a vertical meter: frame + fill from the bottom; g._fill scales with s (use tw(g._fill, {s: q}))
+function kmBar(p, x, y, h, color, cap) {
+  const g = G(p, { x, y, o: 0 });
+  mk('rect', { x: -30, y: -h, width: 60, height: h, rx: 12, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  // the fill grows from the bottom by tweening its height and y (a_height / a_y)
+  g._fill = mk('rect', { x: -26, y: -4 - (h - 8) * .15, width: 52, height: (h - 8) * .15, rx: 10, fill: color }, g);
+  g._h = h - 8;
+  if (cap) T(g, cap, { y: 34, size: 24, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+// set the meter to q (0..1) at t0
+function kmBarTo(bar, q, t0, dur = .8) { const hh = bar._h * q; tw(bar._fill, { a_height: hh, a_y: -4 - hh }, t0, dur, io); }
+// a rubber stamp impression, rotated
+function kmStamp(p, str, x, y, color = DEAD) {
+  const g = G(p, { x, y, o: 0, s: 1.6, r: -12 });
+  mk('rect', { x: -150, y: -40, width: 300, height: 80, rx: 12, fill: 'none', stroke: color, 'stroke-width': 6 }, g);
+  T(g, str, { y: 12, size: 34, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+// a ₹100 note lying on the ground
+function kmNote(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0, r: -8 });
+  mk('rect', { x: -60, y: -28, width: 120, height: 56, rx: 6, fill: '#c7b3e0', stroke: PLUM, 'stroke-width': 2 }, g);
+  mk('circle', { cx: -30, cy: 0, r: 14, fill: '#fff', opacity: .8 }, g);
+  T(g, '₹100', { x: 18, y: 9, size: 24, fill: PLUM, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+// a sprout with `n` leaves (0..3) — stage of growth
+function kmPlant(p, x, y, stage = 0, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-60 0q0-30 30-30h60q30 0 30 30z', fill: '#c69c6d' }, g);
+  const st = mk('path', { d: `M0 -28v${-20 - stage * 40}`, stroke: LIVE, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);
+  for (let i = 0; i < stage; i++) { const yy = -50 - i * 40, dir = i % 2 ? 1 : -1; mk('path', { d: `M0 ${yy}q${dir * 20} -30 ${dir * 44} -14q-20 24-44 14z`, fill: i === stage - 1 ? COL.leaf2 : LIVE }, g); }
+  if (stage >= 3) mk('circle', { cx: 0, cy: -180, r: 10, fill: COL.sun }, g);
+  return g;
+}
+// a checkbox row: box + text, left-aligned at x; g._box is the box, g._tick the hidden tick
+function kmCheck(p, str, x, y, color = CORAL, { size = 26, tc = COL.chalk } = {}) {
+  const g = G(p, { x, y, o: 0 });
+  g._box = mk('rect', { x: 0, y: -18, width: 36, height: 36, rx: 8, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  g._tick = mk('path', { d: 'M8 0l10 10l14 -20', stroke: color, 'stroke-width': 5, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g); put(g._tick, { o: 0 });
+  T(g, str, { x: 54, y: 9, size, fill: tc, weight: 600 });
+  return g;
+}
+// a profile head (silhouette) with a brain shape inside; g._brain
+function kmHead(p, x, y, s = 1, color = CORAL) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-20 120v-40q-70-10-80-80q-10-90 70-110q90-10 120 60q20 40-10 90l20 50l-40 10v20z', fill: '#f1c7a0', stroke: BARK, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  g._brain = mk('path', { d: 'M-30 -50q-30 0-30 30q0 30 30 30q10 20 40 10q30 10 40-20q20-30-10-50q-20-20-50-5q-10-5-20 5z', fill: '#ffd1cf', stroke: color, 'stroke-width': 4 }, g);
+  mk('path', { d: 'M-20 -30q20 10 10 40M10 -40q10 20 30 20', stroke: color, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, g);
+  return g;
+}
+// a magnifying lens around (0,0)
+function kmLens(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('circle', { r: 60, fill: '#fff', 'fill-opacity': .3, stroke: INK, 'stroke-width': 6 }, g);
+  mk('path', { d: 'M42 42l40 40', stroke: INK, 'stroke-width': 8, 'stroke-linecap': 'round' }, g);
+  return g;
+}
+
+/* ---------- beats ---------- */
+const BEATS = [
+  ['intro', 'Knowing Myself', (m, D) => {
+    const p = panel(0);
+    const bg = mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: CORAL2 }, p); put(bg, { o: 0 }); tw(bg, { o: 1 }, 0, 1);
+    const g = G(p, { o: 0, y: 24 });
+    T(g, 'नवयान · दिवस २ · धडा ६ · Life Skills', { x: 800, y: 250, size: 26, fill: SAFF, weight: 700, anchor: 'middle' });
+    T(g, 'Knowing Myself', { x: 800, y: 420, size: 120, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    tw(g, { o: 1, y: 0 }, .3, 1.1, out);
+    const mr = kmMirror(p, 250, 420, 1.1); const rb = boy(mr._in, 0, 100, .85); put(rb, { o: 1 }); pop(mr, .6);
+    const b = boy(p, 1330, 640, 1.25); show(b, .9, .5);
+    ['💭', '❤', '⭐'].forEach((e, i) => { const r = dwRound(p, e, '', 1180 + i * 110, 300 + (i % 2) * -40, CORAL, { r: 40, size: 34 }); pop(r, 1.1 + i * .2); });
+    text(p, 'मी स्वतःला किती ओळखतो?', 800, 560, m('sub'), { size: 40, fill: COL.dim, anchor: 'middle', font: SCRIPT, weight: 700 });
+  }],
+
+  ['who', 'मी कोण आहे?', (m) => {
+    const p = panel(0);
+    title(p, 'मी कोण आहे?', .1, 100, CORAL);
+    ['Numbers', 'Society'].forEach((s, i) => { const c = dwChip(p, s, 300 + i * 260, 180, [SAFF, SKY][i], { size: 28, h: 54 }); pop(c, .4 + i * 1.4); });
+    const q = dwChip(p, 'मी स्वतःला किती ओळखतो?', 1150, 180, CORAL, { size: 30, h: 60, fill: CORAL2 }); pop(q, 3.6);
+    ground(p, 760, .2, 80, 820);
+    const b = boy(p, 300, 760, 1.2); show(b, .3, .5);
+    const mr = kmMirror(p, 580, 560, 1.3); const rb = boy(mr._in, 0, 110, .95); put(rb, { o: 1 }); pop(mr, m('mirror'));
+    const look = path(p, 'M340 586q80-30 160-10', { stroke: COL.faint, 'stroke-width': 4, 'stroke-dasharray': '10 10' }, { d: 0 }); draw(look, m('mirror', .4), .5);
+    const qs = [['name', 'तुमचं नाव?'], ['village', 'तुमचं गाव?'], ['like', 'तुम्हाला काय आवडतं?'], ['good', 'कशात चांगलं वाटतं?'], ['hard', 'कशात अडचण येते?'], ['fear', 'कशाची भीती वाटते?'], ['dream', 'तुमचं स्वप्न काय आहे?']];
+    qs.forEach(([mark, s], i) => {
+      const c = dwChip(p, s, 1150, 270 + i * 70, i < 4 ? CORAL : i === 6 ? SAFF : DEAD, { size: 28, h: 56, w: 560, fill: '#fff', tc: COL.chalk }); pop(c, m(mark));
+    });
+    dwBanner(p, 'हीच सुरुवात आहे— स्वतःला ओळखण्याची.', 800, 840, m('start'), { w: 900, size: 36 });
+  }],
+
+  ['meaning', 'Knowing Myself म्हणजे काय?', (m) => {
+    const p = panel(0);
+    title(p, 'Knowing Myself म्हणजे काय?', .1, 100, CORAL);
+    dwBanner(p, 'Knowing Myself = स्वतःला ओळखणे', 800, 200, m('mean'), { w: 800, size: 38 });
+    // left: knowing everything — a long ticked list, crossed out
+    const c1 = kcard(p, 120, 290, 620, 300, DEAD); tw(c1, { o: 1 }, m('not'), .4);
+    T(c1, 'स्वतःबद्दल प्रत्येक गोष्ट माहीत?', { x: 310, y: 56, size: 30, fill: DEAD, weight: 800, anchor: 'middle', font: HEAD });
+    for (let i = 0; i < 8; i++) { const r = mk('rect', { x: 60 + (i % 2) * 280, y: 90 + Math.floor(i / 2) * 44, width: 220, height: 20, rx: 10, fill: '#e5e7eb' }, c1); put(r, { o: 0 }); show(r, m('not', .3 + i * .08), .2); }
+    dwCross(p, 430, 440, m('not', 1.4), DEAD, 70);
+    T(c1, 'असा अर्थ नाही', { x: 310, y: 280, size: 26, fill: DEAD, weight: 700, anchor: 'middle' });
+    // right: learning to ask yourself questions
+    const c2 = kcard(p, 860, 290, 620, 300, CORAL); tw(c2, { o: 1 }, m('ask'), .4);
+    T(c2, 'स्वतःला प्रश्न विचारायला शिकणं', { x: 310, y: 56, size: 30, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    const b = boy(c2, 160, 280, .8); show(b, m('ask', .2), .3);
+    const qm = T(c2, '?', { x: 400, y: 210, size: 120, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD, o: 0, s: .5 }); pop(qm, m('ask', .4)); pulse(qm, m('ask', 1), 1.15);
+    [['q1', 'मला काय आवडतं?'], ['q2', 'मला काय जमतं?'], ['q3', 'मला कुठे सुधारायचं आहे?']].forEach(([mark, s], i) => {
+      const c = dwChip(p, s, 320 + i * 480, 680, CORAL, { size: 32, h: 70, w: 440, fill: CORAL2 }); pop(c, m(mark));
+    });
+    note(p, 'तीन प्रश्न— प्रत्येक दिवशी विचारता येतात', 800, 790, m('q3', 1.4), SAFF, 30, 0);
+  }],
+
+  ['different', 'प्रत्येक व्यक्ती वेगळी असते', (m) => {
+    const p = panel(0);
+    title(p, 'प्रत्येक व्यक्ती वेगळी असते', .1, 100, CORAL);
+    // the classroom: 30 kids in 5 rows of 6
+    const room = G(p, { o: 0 });
+    mk('rect', { x: 80, y: 160, width: 920, height: 560, rx: 16, fill: '#fffaf2', stroke: BARK, 'stroke-width': 4 }, room);
+    mk('rect', { x: 320, y: 180, width: 440, height: 70, rx: 8, fill: '#1f3b2f', stroke: BARK, 'stroke-width': 4 }, room);
+    T(room, 'वर्ग · ३० विद्यार्थी', { x: 540, y: 226, size: 28, fill: '#fff', weight: 800, anchor: 'middle', font: HEAD });
+    show(room, .4, .4);
+    const shirts = [SKY, CORAL, SAFF, LIVE, PLUM, '#f472b6', '#14b8a6', '#fb923c'], hairs = ['short', 'long', 'curly', 'brown'];
+    const kids = [];
+    for (let i = 0; i < 30; i++) {
+      const r = Math.floor(i / 6), c = i % 6;
+      const k = kmKid(p, 190 + c * 140, 370 + r * 80, shirts[(i * 5 + r) % 8], hairs[(i * 3 + r) % 4], .75); kids.push(k); show(k, m('class', .3 + i * .04), .25);
+    }
+    [2, 9, 15, 20, 27].forEach((i, j) => pulse(kids[i], m('look', j * .3), 1.25));
+    // what each one likes: a bubble over a chosen kid
+    [['draw', 1, '🎨 drawing'], ['cricket', 10, '🏏 cricket'], ['maths', 16, '➗ Maths'], ['read', 21, '📖 गोष्टी'], ['talk', 25, '💬 बोलणं'], ['quiet', 5, '🤔 विचार']].forEach(([mark, i, s]) => {
+      const k = kids[i], x = 190 + (i % 6) * 140, y = 370 + Math.floor(i / 6) * 80;
+      bubble(p, s, x, y - 110, m(mark), { w: 170, color: CORAL, size: 24, font: HEAD }); pulse(k, m(mark, .2), 1.3);
+    });
+    dwBanner(p, 'प्रत्येकाची स्वतःची एक वेगळी रचना', 540, 790, m('own'), { w: 760, size: 34 });
+    // and you? — interests column on the right
+    const yc = kcard(p, 1060, 160, 460, 640, CORAL); tw(yc, { o: 1 }, m('you'), .4);
+    T(yc, 'आणि तुम्ही?', { x: 230, y: 56, size: 34, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    T(yc, 'मोकळ्या वेळेत काय आवडतं?', { x: 230, y: 94, size: 24, fill: COL.dim, weight: 700, anchor: 'middle' });
+    [['🎨', 'Drawing?'], ['⚽', 'खेळ?'], ['📚', 'Reading?'], ['🎵', 'Music?'], ['🌱', 'झाडांची काळजी?']].forEach(([e, s], i) => {
+      const g = G(yc, { x: 60, y: 150 + i * 86, o: 0, s: .8 });
+      mk('circle', { cx: 30, cy: 0, r: 30, fill: CORAL2, stroke: CORAL, 'stroke-width': 3 }, g); T(g, e, { x: 30, y: 11, size: 30, anchor: 'middle' });
+      T(g, s, { x: 84, y: 10, size: 28, fill: COL.chalk, weight: 700 });
+      pop(g, m('you', 2.6 + i * .9));
+    });
+    note(p, 'आज आवडींची छोटी यादी करा', 1290, 600 + 170, m('list'), SAFF, 28, -3);
+  }],
+
+  ['q1', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-meaning', prompt: ['Knowing Myself म्हणजे काय?'],
+    build: choice([
+      ['स्वतःबद्दल प्रत्येक गोष्ट माहीत असणं.'],
+      ['स्वतःला प्रश्न विचारायला शिकणं— मला काय आवडतं? काय जमतं? कुठे सुधारायचं?'],
+      ['फक्त स्वतःचं नाव आणि गाव माहीत असणं.'],
+      ['इतरांपेक्षा चांगलं असणं.'],
+    ], 1, 'बरोबर! Knowing Myself म्हणजे स्वतःला प्रश्न विचारायला शिकणं. हीच सुरुवात.', [
+      'पुस्तक म्हणतं— याचा अर्थ प्रत्येक गोष्ट माहीत असणं नाही. तर प्रश्न विचारायला शिकणं.',
+      null,
+      'नाव आणि गाव ही सुरुवात आहे. पण आवड, ताकद, भीती, स्वप्न— हेही स्वतःला ओळखणं.',
+      'तुलना नाही. स्वतःला ओळखणं म्हणजे स्वतःकडे पाहणं, इतरांकडे नाही.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['ability', 'Interest आणि Ability एकच नाही', (m) => {
+    const p = panel(0);
+    title(p, 'Interest आणि Ability एकच नाही', .1, 100, CORAL);
+    // left: interest — the boy loves cricket (a heart)
+    const c1 = kcard(p, 120, 170, 560, 400, CORAL); tw(c1, { o: 1 }, .5, .4);
+    T(c1, 'Interest — आवड', { x: 280, y: 56, size: 34, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    const b = boy(c1, 180, 370, 1); show(b, m('like', .2), .3);
+    const bat = mk('path', { d: 'M230 300l40 -70', stroke: BARK, 'stroke-width': 14, 'stroke-linecap': 'round' }, c1); put(bat, { o: 0 }); show(bat, m('like', .3));
+    const ht = G(c1, { x: 400, y: 200, o: 0, s: .5 }); mk('path', { d: 'M0 40q-70-50-70-90a35 35 0 0 1 70-20a35 35 0 0 1 70 20q0 40-70 90z', fill: CORAL }, ht); T(ht, 'cricket', { y: 84, size: 26, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    pop(ht, m('like', .5)); pulse(ht, m('like', 1.2), 1.2);
+    // right: ability — a meter, low at first
+    const c2 = kcard(p, 920, 170, 560, 400, SKY); tw(c2, { o: 1 }, m('like', .9), .4);
+    T(c2, 'Ability — क्षमता', { x: 280, y: 56, size: 34, fill: SKY, weight: 800, anchor: 'middle', font: HEAD });
+    const bar = kmBar(c2, 420, 350, 240, SKY, 'आज'); show(bar, m('like', 1.1), .3);
+    const lo = T(c2, 'लगेच चांगली जमेलच असं नाही', { x: 200, y: 200, size: 24, fill: COL.dim, weight: 700, anchor: 'middle', o: 0 }); show(lo, m('like', 1.6));
+    const nv = T(c2, 'आज जमत नाही ≠ कधीच नाही', { x: 200, y: 250, size: 24, fill: SKY, weight: 800, anchor: 'middle', o: 0 }); show(nv, m('today', .6));
+    // practice: ticks appear and the meter climbs
+    [0, 1, 2, 3, 4].forEach(i => { const t = T(c2, '✓ practice', { x: 70 + (i % 2) * 150, y: 300 + Math.floor(i / 2) * 34, size: 22, fill: LIVE, weight: 800, font: HEAD, o: 0 }); show(t, m('practice', .3 + i * .25)); });
+    kmBarTo(bar, .85, m('practice', .6), 1.8);
+    const up = T(c2, 'ability ↑', { x: 420, y: 90, size: 26, fill: LIVE, weight: 800, anchor: 'middle', font: HEAD, o: 0 }); show(up, m('practice', 1.8));
+    // the two sentences
+    const nb = bubble(p, '“मला जमत नाही.”', 400, 700, m('not'), { w: 420, color: DEAD, size: 32, tc: DEAD });
+    const yb = G(p, { x: 1200, y: 700, o: 0, s: .7 });
+    mk('path', { d: 'M-260 -40h520a16 16 0 0 1 16 16v56a16 16 0 0 1-16 16h-220l-24 26v-26h-252a16 16 0 0 1-16-16v-56a16 16 0 0 1 16-16z', fill: CORAL2, stroke: CORAL, 'stroke-width': 3 }, yb);
+    T(yb, '“मला', { x: -150, y: 12, size: 32, fill: COL.chalk, weight: 600, anchor: 'start' });
+    const aj = T(yb, 'अजून', { x: -10, y: 14, size: 40, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    T(yb, 'जमत नाही.”', { x: 50, y: 12, size: 32, fill: COL.chalk, weight: 600, anchor: 'start' });
+    pop(yb, m('yet')); pulse(aj, m('yet', 2.4), 1.3);
+    dwArrow(p, 640, 700, 900, 700, m('yet', -.2), CORAL, .4);
+    note(p, 'हा छोटासा फरक खूप मोठा असतो', 800, 830, m('big'), SAFF, 34, 0);
+  }],
+
+  ['strength', 'Strength — माझी ताकद', (m) => {
+    const p = panel(0);
+    title(p, 'Strength — माझी ताकद', .1, 100, CORAL);
+    const arm = dwRound(p, '💪', 'प्रत्येकाकडे काही ना काही', 300, 330, CORAL, { r: 90, size: 80, capSize: 26 }); pop(arm, .5);
+    [['s1', '👂', 'कोणी चांगलं ऐकतो.'], ['s2', '🧘', 'कोणी शांतपणे काम करतो.'], ['s3', '⚡', 'कोणी पटकन शिकतो.'], ['s4', '🤝', 'कोणी इतरांना मदत करतो.'], ['s5', '🙋', 'कोणी प्रश्न विचारायला घाबरत नाही.']].forEach(([mark, e, s], i) => {
+      const g = kcard(p, 580, 170 + i * 96, 900, 80, CORAL, { fill: i % 2 ? '#fff' : CORAL2 }); tw(g, { o: 1, x: 580 }, m(mark), .4); put(g, { x: 620 });
+      T(g, e, { x: 60, y: 52, size: 36, anchor: 'middle' });
+      T(g, s, { x: 110, y: 52, size: 30, fill: COL.chalk, weight: 700 });
+    });
+    // marks sheet — strength is not only there
+    const sh = G(p, { x: 300, y: 640, o: 0, s: .8 });
+    mk('rect', { x: -90, y: -110, width: 180, height: 220, rx: 8, fill: '#fff', stroke: DEAD, 'stroke-width': 3 }, sh);
+    T(sh, 'Marks', { y: -70, size: 24, fill: DEAD, weight: 800, anchor: 'middle', font: HEAD });
+    [0, 1, 2, 3].forEach(i => { mk('rect', { x: -70, y: -46 + i * 30, width: 90, height: 10, rx: 5, fill: '#e5e7eb' }, sh); T(sh, ['72', '58', '81', '66'][i], { x: 60, y: -36 + i * 30, size: 20, fill: DEAD, weight: 700, anchor: 'middle' }); });
+    pop(sh, m('marks'));
+    const arrow = dwArrow(p, 410, 640, 560, 640, m('marks', .6), CORAL, .4);
+    text(p, 'फक्त इथे नाही →', 410, 610, m('marks', .3), { size: 24, fill: DEAD, anchor: 'start', weight: 700 });
+    dwBanner(p, 'तुमची ताकद फक्त marks मध्ये नसते.', 1030, 760, m('marks', .9), { w: 760, size: 36 });
+  }],
+
+  ['weakness', 'Weakness म्हणजे काय?', (m) => {
+    const p = panel(0);
+    title(p, 'Weakness म्हणजे काय?', .1, 100, CORAL);
+    text(p, 'काही गोष्टी आपल्याला कठीण जातात. कदाचित—', 420, 170, .5, { size: 28, fill: COL.dim, anchor: 'middle', weight: 700 });
+    const rows = [['w1', 'लवकर राग येतो.'], ['w2', 'काम पुढे ढकलतो.'], ['w3', 'लोकांसमोर बोलायला भीती वाटते.'], ['w4', 'अभ्यासात लक्ष लागत नाही.'], ['w5', 'चूक झाली की निराश होतो.']].map(([mark, s], i) => {
+      const c = dwChip(p, s, 420, 230 + i * 62, DEAD, { size: 26, h: 50, w: 600, fill: '#f3f4f6', tc: COL.chalk }); pop(c, m(mark)); return c;
+    });
+    // they are "things to improve": chips turn coral
+    rows.forEach((c, i) => { tw(c._rect, { c_stroke: CORAL, c_fill: CORAL2 }, m('improve', .2 + i * .12), .4); });
+    const wr = dwRound(p, '🔧', 'सुधारण्याच्या गोष्टी', 900, 300, CORAL, { r: 70, size: 60, capSize: 26 }); pop(wr, m('improve'));
+    // a permanent stamp? no — it can be improved
+    const st = kmStamp(p, 'कायमचा शिक्का', 1300, 270, DEAD); tw(st, { o: 1, s: 1 }, m('stamp'), .35, back);
+    dwCross(p, 1300, 270, m('stamp', 1.2), CORAL, 60);
+    const fx1 = dwChip(p, 'ती सुधारता येते ✓', 1300, 420, LIVE, { size: 30, h: 64, w: 360, fill: '#e9f8ee' }); pop(fx1, m('fix'));
+    // two lists for the notebook
+    const nb = kcard(p, 120, 560, 1360, 300, CORAL); tw(nb, { o: 1 }, m('honest'), .4);
+    T(nb, 'माझ्या ताकदी', { x: 60, y: 54, size: 30, fill: CORAL, weight: 800, font: HEAD });
+    T(nb, 'मला सुधारायच्या गोष्टी', { x: 720, y: 54, size: 30, fill: SKY, weight: 800, font: HEAD });
+    for (let i = 0; i < 3; i++) { [60, 720].forEach((x, j) => { const l = path(nb, `M${x} ${100 + i * 46}H${x + 580}`, { stroke: j ? '#bfdbfe' : '#fecaca', 'stroke-width': 3 }, { d: 0 }); draw(l, m('honest', .4 + i * .15 + j * .08), .3); }); }
+    const hn = note(p, 'स्वतःशी प्रामाणिक रहा. इथे योग्य किंवा चुकीचं उत्तर नाही.', 800, 830, m('honest', 5.6), SAFF, 30, 0);
+  }],
+
+  ['q2', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-yet', prompt: ['“मला जमत नाही.” याऐवजी काय म्हणावं?'],
+    build: choice([
+      ['“मला कधीच जमणार नाही.”'],
+      ['“मला सगळं जमतं.”'],
+      ['“मला अजून जमत नाही.”'],
+      ['“मला ते आवडत नाही.”'],
+    ], 2, 'बरोबर! “अजून” हा छोटासा शब्द— practice मुळे ability वाढू शकते, हे सांगतो.', [
+      'आज जमत नाही म्हणजे कधीच जमणार नाही असं नाही. Practice मुळे ability वाढते.',
+      'स्वतःशी प्रामाणिक रहा. सगळं जमतं असं नाही— पण शिकता येतं.',
+      null,
+      'आवड आणि क्षमता वेगळ्या. प्रश्न जमण्याचा आहे— “अजून” जमत नाही.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['aware', 'Self-Awareness — स्वतःची जाणीव', (m) => {
+    const p = panel(0);
+    title(p, 'Self-Awareness — स्वतःची जाणीव', .1, 100, CORAL);
+    const hd = kmHead(p, 560, 440, 1.3); show(hd, .3, .5);
+    const orbit = [['think', '💭', 'विचार', 300, 260], ['feel', '❤', 'भावना', 300, 560], ['habit', '🔁', 'सवयी', 900, 260], ['strong', '💪', 'ताकद', 900, 560]];
+    orbit.forEach(([mark, e, cap, x, y]) => {
+      const r = dwRound(p, e, cap, x, y, CORAL, { r: 60, size: 48, capSize: 26 }); pop(r, m(mark));
+      const ln = path(p, `M${x < 560 ? x + 60 : x - 60} ${y}L${560 + (x < 560 ? -40 : 40)} ${440 + (y < 440 ? -40 : 30)}`, { stroke: CORAL, 'stroke-width': 4, 'stroke-dasharray': '10 8' }, { d: 0 }); draw(ln, m(mark, .3), .4);
+      pulse(hd._brain, m(mark, .5), 1.12);
+    });
+    dwBanner(p, 'Self-Awareness', 1250, 360, m('name'), { w: 500, size: 44, sub: 'स्वतःची जाणीव' });
+    const ls = dwChip(p, 'एक मोठी Life Skill', 1250, 520, LIVE, { size: 32, h: 70, w: 420, fill: '#e9f8ee' }); pop(ls, m('skill'));
+    note(p, 'विचार · भावना · सवयी · ताकद — यांची जाणीव', 800, 790, m('skill', 1.2), SAFF, 30, 0);
+  }],
+
+  ['feelings', 'आपल्या भावना ओळखणे', (m) => {
+    const p = panel(0);
+    title(p, 'आपल्या भावना ओळखणे', .1, 100, CORAL);
+    const faces = [['joy', '😄', 'आनंद'], ['anger', '😠', 'राग'], ['fear', '😨', 'भीती'], ['sad', '😢', 'दुःख'], ['nice', '🤩', 'छान वाटतं']];
+    S.faces = faces.map(([mark, e, cap], i) => {
+      const r = dwRound(p, e, cap, 200 + i * 300, 400, CORAL, { r: 90, size: 96, capSize: 30 }); pop(r, m(mark)); pulse(r, m(mark, .5), 1.1); return r;
+    });
+    dwBanner(p, 'या सगळ्या भावना आहेत.', 800, 680, m('all'), { w: 760, size: 40, sub: 'त्यांना ओळखणं महत्त्वाचं.' });
+  }],
+
+  ['orders', 'भावना म्हणजे आदेश नाहीत', (m) => {
+    const p = panel(0);
+    title(p, 'भावना म्हणजे आदेश नाहीत', .1, 100, CORAL);
+    const row = (y, markQ, markA, e, q, a, strong) => {
+      const f = dwRound(p, e, '', 170, y, CORAL, { r: 46, size: 48 }); pop(f, m(markQ));
+      dwArrow(p, 230, y, 300, y, m(markQ, .2), COL.dim, .3);
+      const qc = dwChip(p, q, 560, y, DEAD, { size: 28, h: 60, w: 480, fill: '#f3f4f6', tc: COL.chalk }); pop(qc, m(markQ, .4));
+      dwCross(p, 860, y, m(markA), CORAL, strong ? 22 : 16);
+      const ac = dwChip(p, a, 1070, y, CORAL, { size: 30, h: 60, w: 300, fill: CORAL2 }); pop(ac, m(markA, .2));
+    };
+    row(200, 'shout', 'no1', '😠', 'लगेच ओरडायचं?', 'नाही.', true);
+    row(300, 'run', 'no2', '😨', 'लगेच पळायचं?', 'नेहमीच नाही.', false);
+    row(400, 'thought', 'no3', '💭', 'विचार आला = खरा?', 'नाही.', true);
+    // the three steps
+    const steps = [['stop', '✋', 'थांबा'], ['think', '🤔', 'विचार करा'], ['act', '✅', 'मग कृती']];
+    steps.forEach(([mark, e, cap], i) => {
+      const x = 400 + i * 400;
+      const r = dwRound(p, e, cap, x, 600, LIVE, { r: 64, size: 56, capSize: 28 }); pop(r, m(mark));
+      if (i) dwArrow(p, x - 320, 600, x - 80, 600, m(mark, -.2), LIVE, .4);
+    });
+    dwBanner(p, 'हीच emotional control ची सुरुवात आहे.', 800, 810, m('ec'), { w: 900, size: 36 });
+  }],
+
+  ['q3', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-anger', prompt: ['राग आला, तर काय करावं?'],
+    build: choice([
+      ['लगेच ओरडायचं— राग आला म्हणजे आदेशच.'],
+      ['थांबायचं, विचार करायचा, आणि मग कृती करायची.'],
+      ['राग ही वाईट भावना आहे, ती कधीच येऊ द्यायची नाही.'],
+      ['लगेच तिथून पळून जायचं.'],
+    ], 1, 'बरोबर! भावना म्हणजे आदेश नाहीत. थांबा → विचार करा → कृती. हीच emotional control ची सुरुवात.', [
+      'भावना म्हणजे आदेश नाहीत. राग आला म्हणजे लगेच ओरडायचं? नाही.',
+      null,
+      'राग ही एक भावना आहे; ती ओळखणं महत्त्वाचं. प्रश्न आहे— तिच्यावर लगेच कृती करायची का?',
+      'भीती वाटली म्हणजे लगेच पळायचं? नेहमीच नाही. आधी थांबा, विचार करा.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['habits', 'माझ्या सवयी', (m) => {
+    const p = panel(0);
+    title(p, 'माझ्या सवयी', .1, 100, CORAL);
+    const big = dwChip(p, 'मोठे निर्णय', 300, 200, DEAD, { size: 34, h: 80, w: 360, fill: '#f3f4f6' }); pop(big, .5);
+    text(p, 'फक्त यांनीच आयुष्य बनत नाही', 300, 268, m('big', .5), { size: 24, fill: DEAD, anchor: 'middle', weight: 700 });
+    text(p, 'छोट्या सवयीही महत्त्वाच्या', 300, 330, m('small'), { size: 30, fill: CORAL, anchor: 'middle', weight: 800, font: HEAD });
+    [['h1', '⏰', 'वेळेवर उठणं'], ['h2', '📚', 'पुस्तक जागेवर ठेवणं'], ['h3', '📖', 'दररोज थोडं वाचणं'], ['h4', '✅', 'काम पूर्ण करणं'], ['h5', '👂', 'इतरांचं ऐकणं'], ['h6', '📵', 'मोबाईलला मर्यादा']].forEach(([mark, e, s], i) => {
+      const g = G(p, { x: 90 + (i % 2) * 300, y: 400 + Math.floor(i / 2) * 80, o: 0, s: .8 });
+      mk('rect', { x: 0, y: -30, width: 280, height: 60, rx: 14, fill: CORAL2, stroke: CORAL, 'stroke-width': 3 }, g);
+      T(g, e, { x: 34, y: 11, size: 30, anchor: 'middle' }); T(g, s, { x: 66, y: 9, size: 23, fill: COL.chalk, weight: 700 });
+      pop(g, m(mark));
+    });
+    // a month of small ticks, and a plant that grows
+    const cal = kcard(p, 760, 180, 440, 400, LIVE); tw(cal, { o: 1 }, m('daily'), .4);
+    T(cal, 'रोज एक छोटी सवय', { x: 220, y: 50, size: 28, fill: LIVE, weight: 800, anchor: 'middle', font: HEAD });
+    for (let i = 0; i < 28; i++) {
+      const x = 50 + (i % 7) * 52, y = 90 + Math.floor(i / 7) * 60;
+      mk('rect', { x, y, width: 44, height: 48, rx: 8, fill: '#f8fafc', stroke: '#e5e7eb', 'stroke-width': 2 }, cal);
+      const tk = T(cal, '✓', { x: x + 22, y: y + 34, size: 28, fill: LIVE, weight: 800, anchor: 'middle', o: 0 }); show(tk, m('daily', .6 + i * .07), .1);
+    }
+    const months = ['महिना १', 'महिना २', 'महिना ३'];
+    months.forEach((s, i) => {
+      const pl = kmPlant(p, 1300, 560, i + 1, 1); show(pl, m('months', i * .9), .3); if (i < 2) hide(pl, m('months', (i + 1) * .9), .2);
+      const t = T(p, s, { x: 1300, y: 620, size: 24, fill: LIVE, weight: 800, anchor: 'middle', font: HEAD, o: 0 }); show(t, m('months', i * .9)); if (i < 2) hide(t, m('months', (i + 1) * .9), .1);
+    });
+    const seed = kmPlant(p, 1300, 560, 0, 1); show(seed, m('daily'), .3); hide(seed, m('months'), .2);
+    dwBanner(p, 'काही महिन्यांनी मोठा बदल', 1000, 700, m('months', 2.4), { w: 640, size: 36 });
+    note(p, 'छोटी सवय × रोज = मोठा बदल', 800, 830, m('months', 3.2), SAFF, 32, 0);
+  }],
+
+  ['selftalk', 'आपण स्वतःशी कसे बोलतो?', (m) => {
+    const p = panel(0);
+    title(p, 'आपण स्वतःशी कसे बोलतो?', .1, 100, CORAL);
+    ground(p, 760, .2, 600, 1000);
+    const b = boy(p, 800, 760, 1.3); show(b, .3, .5);
+    text(p, 'कधी आपण स्वतःशीच म्हणतो—', 330, 190, m('some'), { size: 26, fill: DEAD, anchor: 'middle', weight: 700 });
+    const neg = [['n1', '“मी काहीच करू शकत नाही.”'], ['n2', '“मी इतरांपेक्षा कमी आहे.”'], ['n3', '“माझ्याकडून होणार नाही.”']].map(([mark, s], i) => {
+      const bb = bubble(p, s, 330, 280 + i * 130, m(mark), { w: 460, color: DEAD, size: 28, tc: DEAD, fill: '#f3f4f6' }); return bb;
+    });
+    put(b._mouth, { o: 1 });
+    const sad = mk('path', { d: 'M-9 -130q9 -8 18 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, b); put(sad, { o: 0 });
+    show(sad, m('n1'), .2); tw(b._mouth, { o: 0 }, m('n1'), .2);
+    const hand = dwRound(p, '✋', 'थांबा.', 800, 330, CORAL, { r: 70, size: 64, capSize: 32 }); pop(hand, m('stop')); pulse(hand, m('stop', .4), 1.15);
+    neg.forEach((bb, i) => tw(bb, { o: .3, s: .9 }, m('instead', i * .1), .4));
+    text(p, 'त्याऐवजी प्रयत्न करा—', 1270, 190, m('instead'), { size: 26, fill: LIVE, anchor: 'middle', weight: 700 });
+    [['p1', '“मी शिकू शकतो.”'], ['p2', '“मी प्रयत्न करू शकतो.”'], ['p3', '“माझ्यात सुधारण्याची क्षमता आहे.”']].forEach(([mark, s], i) => {
+      bubble(p, s, 1270, 280 + i * 130, m(mark), { w: 500, color: LIVE, size: 28, fill: '#e9f8ee' });
+    });
+    hide(sad, m('p1'), .2); tw(b._mouth, { o: 1 }, m('p1'), .2); tw(hand, { o: 0, s: .6 }, m('p1'), .4);
+    dwBanner(p, 'स्वतःशी बोलण्याची पद्धतही प्रवासाचा भाग', 800, 840, m('way'), { w: 900, size: 34 });
+  }],
+
+  ['compare', 'तुलना करणे', (m) => {
+    const p = panel(0);
+    title(p, 'तुलना करणे', .1, 100, CORAL);
+    ground(p, 560, .2, 100, 1500);
+    const fr = boy(p, 300, 560, 1.1, SAFF); show(fr, m('friend'), .4); label(p, 'मित्र', 300, 606, m('friend', .2), SAFF, 26);
+    const fm = kmBar(p, 430, 556, 260, SAFF, 'Maths'); show(fm, m('friend', .3), .3); kmBarTo(fm, .9, m('friend', .6), .8);
+    const fd = kmBar(p, 530, 556, 260, SAFF, 'Drawing'); show(fd, m('friend', .4), .3); kmBarTo(fd, .35, m('friend', .8), .8);
+    const yo = boy(p, 1300, 560, 1.1, SKY); show(yo, m('you'), .4); label(p, 'तुम्ही', 1300, 606, m('you', .2), SKY, 26);
+    const ym = kmBar(p, 1070, 556, 260, SKY, 'Maths'); show(ym, m('you', .3), .3); kmBarTo(ym, .4, m('you', .6), .8);
+    const yd = kmBar(p, 1170, 556, 260, SKY, 'Drawing'); show(yd, m('you', .4), .3); kmBarTo(yd, .9, m('you', .8), .8);
+    const who = dwChip(p, 'मग कोण चांगला?', 800, 300, DEAD, { size: 34, h: 76, w: 420, fill: '#f3f4f6', tc: COL.chalk }); pop(who, m('who'));
+    dwCross(p, 800, 300, m('wrong'), CORAL, 44);
+    text(p, 'हा प्रश्नच चुकीचा आहे. प्रत्येकाचा प्रवास वेगळा.', 800, 400, m('wrong', .6), { size: 26, fill: COL.dim, anchor: 'middle', weight: 700 });
+    dwBanner(p, 'Compare less. Improve more.', 800, 680, m('less'), { w: 760, size: 44 });
+    // yesterday-me → today-me
+    const y1 = boy(p, 560, 860, .7, SKY); show(y1, m('yesterday'), .3); label(p, 'कालचा मी', 560, 880, m('yesterday', .1), COL.dim, 22);
+    dwArrow(p, 640, 800, 900, 800, m('yesterday', .5), LIVE, .5);
+    const y2 = boy(p, 1000, 860, .8, SKY); show(y2, m('yesterday', 1), .3); label(p, 'आजचा मी — थोडा चांगला', 1060, 880, m('yesterday', 1.2), LIVE, 22);
+    const sp = T(p, '✦', { x: 1110, y: 775, size: 40, fill: SAFF, o: 0 }); show(sp, m('yesterday', 1.4)); pulse(sp, m('yesterday', 1.6), 1.4);
+  }],
+
+  ['values', 'माझी Values — माझी मूल्ये', (m) => {
+    const p = panel(0);
+    title(p, 'माझी Values — माझी मूल्ये', .1, 100, CORAL);
+    text(p, 'तुमच्यासाठी कोणत्या गोष्टी महत्त्वाच्या आहेत?', 800, 165, .5, { size: 28, fill: COL.dim, anchor: 'middle', weight: 700 });
+    [['v1', 'प्रामाणिकपणा'], ['v2', 'कुटुंब'], ['v3', 'मैत्री'], ['v4', 'मेहनत'], ['v5', 'दयाळूपणा'], ['v6', 'जबाबदारी'], ['v7', 'धैर्य']].forEach(([mark, s], i) => {
+      const c = dwChip(p, s + '?', 200 + i * 200, 240, CORAL, { size: 28, h: 60, fill: CORAL2 }); pop(c, m(mark));
+    });
+    text(p, 'तुमची Values तुमच्या निर्णयांवर परिणाम करतात.', 800, 330, m('effect'), { size: 28, fill: CORAL, anchor: 'middle', weight: 800, font: HEAD });
+    // the road: ₹100 on the ground, nobody around
+    const road = G(p, { o: 0 });
+    mk('rect', { x: 100, y: 600, width: 900, height: 80, rx: 10, fill: '#4b5563' }, road);
+    mk('path', { d: 'M120 640H980', stroke: '#fde68a', 'stroke-width': 4, 'stroke-dasharray': '30 24' }, road);
+    show(road, m('road'), .4);
+    const b = boy(p, 300, 600, 1.1); show(b, m('road', .2), .3);
+    const nt = kmNote(p, 520, 596, 1); pop(nt, m('road', .6)); pulse(nt, m('road', 1.2), 1.2);
+    const em = T(p, 'आजूबाजूला कोणी नाही…', { x: 760, y: 560, size: 26, fill: DEAD, weight: 700, anchor: 'middle', font: SCRIPT, o: 0 }); show(em, m('nobody'));
+    bubble(p, 'तुम्ही काय कराल?', 560, 440, m('do'), { w: 360, color: CORAL, size: 30 });
+    dwBanner(p, 'माझे Decisions माझ्याबद्दल सांगतात', 1280, 520, m('tells'), { w: 580, size: 28 });
+    const sm = kcard(p, 1060, 600, 460, 200, SAFF, { fill: '#fffbeb' }); tw(sm, { o: 1 }, m('small'), .4);
+    T(sm, 'Life Skills म्हणजे', { x: 230, y: 54, size: 26, fill: COL.dim, weight: 700, anchor: 'middle' });
+    T(sm, 'नेहमी मोठ्या समस्या नाही—', { x: 230, y: 94, size: 26, fill: COL.chalk, weight: 700, anchor: 'middle' });
+    T(sm, 'कधी कधी योग्य छोटा निर्णय.', { x: 230, y: 150, size: 30, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD });
+  }],
+
+  ['fears', 'माझी भीती · माझी स्वप्नं', (m) => {
+    const p = panel(0);
+    title(p, 'माझी भीती', .1, 100, CORAL);
+    const fc = kcard(p, 100, 160, 640, 560, DEAD, { fill: '#f8fafc' }); tw(fc, { o: 1 }, .5, .4);
+    T(fc, '🔒 फक्त माझ्यासाठी', { x: 320, y: 54, size: 28, fill: DEAD, weight: 800, anchor: 'middle', font: HEAD });
+    T(fc, 'प्रत्येकाला कशाची ना कशाची भीती वाटू शकते.', { x: 320, y: 92, size: 22, fill: COL.dim, weight: 700, anchor: 'middle' });
+    [['f1', '📝', 'परीक्षा'], ['f2', '🎤', 'लोकांसमोर बोलणं'], ['f3', '❌', 'चूक होणं'], ['f4', '📉', 'अपयश'], ['f5', '🚪', 'एकटं राहणं']].forEach(([mark, e, s], i) => {
+      const g = G(fc, { x: 60, y: 150 + i * 54, o: 0, s: .8 });
+      T(g, e, { x: 20, y: 11, size: 30, anchor: 'middle' }); T(g, s, { x: 60, y: 10, size: 28, fill: COL.chalk, weight: 700 });
+      pop(g, m(mark));
+    });
+    const wq = bubble(p, '“मला कशाची भीती वाटते?”', 420, 600, m('write'), { w: 480, color: CORAL, size: 28 });
+    note(p, 'उत्तर स्वतःसाठी. कुणाला दाखवण्याची गरज नाही.', 420, 700, m('write', 3.6), SAFF, 26, 0);
+    // dreams on the right
+    const dt = text(p, '⭐ माझी स्वप्नं', 1180, 200, m('dream'), { size: 44, fill: SAFF, anchor: 'middle', weight: 800, font: HEAD });
+    text(p, 'तुम्ही मोठे झाल्यावर काय व्हायचं?', 1180, 245, m('dream', .4), { size: 26, fill: COL.dim, anchor: 'middle', weight: 700 });
+    [['d1', 'Doctor?'], ['d2', 'Engineer?'], ['d3', 'Teacher?'], ['d4', 'Farmer?'], ['d5', 'Artist?'], ['d6', 'Business owner?']].forEach(([mark, s], i) => {
+      const c = dwChip(p, s, 1000 + (i % 2) * 360, 310 + Math.floor(i / 2) * 76, SAFF, { size: 28, h: 60, w: 320, fill: '#fffbeb' }); pop(c, m(mark));
+    });
+    const qq = dwChip(p, 'किंवा अजून काही?', 1180, 538, DEAD, { size: 28, h: 60, w: 360, fill: '#fff', tc: COL.chalk }); pop(qq, m('more'));
+    text(p, 'स्वप्न बदलू शकतं. तुम्हीही बदलू शकता.', 1180, 630, m('change', 2.4), { size: 26, fill: COL.dim, anchor: 'middle', weight: 700 });
+    dwBanner(p, 'महत्त्वाचं— स्वतःला शोधत राहणं.', 1180, 720, m('search'), { w: 600, size: 32 });
+  }],
+
+  ['labels', 'स्वतःला एका नावात बंद करू नका', (m) => {
+    const p = panel(0);
+    title(p, 'स्वतःला एका नावात बंद करू नका', .1, 100, CORAL);
+    ground(p, 700, .2, 500, 1100);
+    const b = boy(p, 800, 700, 1.6); show(b, .3, .5);
+    const tags = [['t1', '“मी Maths मध्ये कमजोर आहे.”', 430, 330, -8], ['t2', '“मी shy आहे.”', 1130, 330, 7], ['t3', '“मला English येत नाही.”', 430, 520, 6], ['t4', '“मी sports मध्ये चांगला नाही.”', 1150, 520, -6]].map(([mark, s, x, y, r]) => {
+      const t = kmTag(p, s, x, y, DEAD, { w: s.length > 20 ? 420 : 320, r }); tw(t, { o: 1, s: 1 }, m(mark), .4, back);
+      const str = path(p, `M${x < 800 ? x + 150 : x - 150} ${y}L${x < 800 ? 760 : 840} ${y > 400 ? 600 : 470}`, { stroke: DEAD, 'stroke-width': 2 }, { d: 0 }); draw(str, m(mark, .2), .3);
+      return [t, str];
+    });
+    const fv = dwChip(p, 'कायमची ओळख?', 800, 220, DEAD, { size: 30, h: 64, w: 320, fill: '#f3f4f6', tc: COL.chalk }); pop(fv, m('forever'));
+    dwCross(p, 800, 220, m('forever', .8), CORAL, 36);
+    // the tags peel off and fly away
+    tags.forEach(([t, str], i) => { const dx = i % 2 ? 300 : -300; tw(t, { x: (i % 2 ? 1130 : 430) + dx, y: 200 + i * 30, o: 0, r: i % 2 ? 40 : -40 }, m('peel', i * .15), .9, io); hide(str, m('peel', i * .15), .2); });
+    pulse(b, m('peel', .8), 1.06);
+    dwBanner(p, 'आज जे जमत नाही, ते उद्या शिकता येऊ शकतं.', 800, 820, m('tomorrow'), { w: 980, size: 36 });
+  }],
+
+  ['story', 'My Story · My Timeline', (m) => {
+    const p = panel(0);
+    title(p, 'My Story', .1, 100, CORAL);
+    // the notebook page
+    const nb = G(p, { o: 0 });
+    mk('rect', { x: 100, y: 160, width: 700, height: 660, rx: 14, fill: '#fff', stroke: BARK, 'stroke-width': 4 }, nb);
+    for (let i = 0; i < 8; i++) mk('circle', { cx: 100, cy: 200 + i * 84, r: 9, fill: '#fff', stroke: BARK, 'stroke-width': 3 }, nb);
+    show(nb, .5, .5);
+    T(nb, 'आता स्वतःची एक छोटी गोष्ट लिहा.', { x: 450, y: 210, size: 26, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    [['l1', 'माझं नाव:'], ['l2', 'मला आवडतं:'], ['l3', 'मला चांगलं जमतं:'], ['l4', 'मला सुधारायचं आहे:'], ['l5', 'मला शिकायचं आहे:'], ['l6', 'माझं एक स्वप्न:']].forEach(([mark, s], i) => {
+      const y = 280 + i * 90;
+      text(nb, s, 150, y, m(mark), { size: 26, fill: COL.chalk, weight: 700 });
+      const l = path(nb, `M150 ${y + 36}H750`, { stroke: '#fecaca', 'stroke-width': 3 }, { d: 0 }); draw(l, m(mark, .3), .4);
+    });
+    // the timeline on the right
+    const tt = text(p, '🗓 My Timeline', 1200, 210, m('timeline'), { size: 40, fill: SKY, anchor: 'middle', weight: 800, font: HEAD });
+    text(p, 'तुमच्या आयुष्यातील तीन आठवणी', 1200, 255, m('timeline', .4), { size: 24, fill: COL.dim, anchor: 'middle', weight: 700 });
+    const ln = path(p, 'M960 330V720', { stroke: SKY, 'stroke-width': 6, 'stroke-linecap': 'round' }, { d: 0 }); draw(ln, m('timeline', .6), .8);
+    [['m1', '🧸', 'माझी एक जुनी आठवण'], ['m2', '😊', 'माझा एक आनंदाचा क्षण'], ['m3', '💡', 'मी काहीतरी नवीन शिकलो तो क्षण']].forEach(([mark, e, s], i) => {
+      const y = 360 + i * 160;
+      const d = mk('circle', { cx: 960, cy: y, r: 16, fill: SKY, stroke: '#fff', 'stroke-width': 4 }, p); put(d, { s: 0 }); pop(d, m(mark));
+      const g = G(p, { x: 1010, y, o: 0, s: .8 });
+      mk('rect', { x: 0, y: -40, width: 500, height: 80, rx: 16, fill: '#eff6ff', stroke: SKY, 'stroke-width': 3 }, g);
+      T(g, e, { x: 44, y: 12, size: 34, anchor: 'middle' }); T(g, s, { x: 86, y: 10, size: 24, fill: COL.chalk, weight: 700 });
+      pop(g, m(mark, .2));
+    });
+    dwBanner(p, 'भूतकाळ दाखवतो— आपण कसे बदललो.', 1200, 800, m('past', 1.6), { w: 620, size: 30 });
+  }],
+
+  ['english', 'आजचे English शब्द', (m) => {
+    const p = panel(0);
+    title(p, 'आजचे English शब्द', .1, 100, CORAL);
+    text(p, 'मोठ्याने बोला.', 800, 150, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    [['Interest', 'आवड', 'e1', '❤'], ['Ability', 'क्षमता', 'e2', '💪'], ['Strength', 'ताकद', 'e3', '⭐'], ['Weakness', 'सुधारण्याची गोष्ट', 'e4', '🔧'],
+     ['Self-Awareness', 'स्वतःची जाणीव', 'e5', '🧠'], ['Values', 'मूल्ये', 'e6', '🪞'], ['Compare less. Improve more.', 'तुलना कमी. सुधारणा जास्त.', 'e7', '📈']].forEach(([en, mr, mark, e], i) => {
+      const col = i < 6 ? i % 2 : 0, row = i < 6 ? Math.floor(i / 2) : 3;
+      const w = i < 6 ? 640 : 1300, x = i < 6 ? 140 + col * 680 : 150;
+      const g = kcard(p, x, 190 + row * 150, w, 120, CORAL); tw(g, { o: 1 }, m(mark), .4);
+      T(g, e, { x: 76, y: 76, size: 44, anchor: 'middle' });
+      T(g, en, { x: 124, y: 56, size: 38, fill: CORAL, weight: 800, font: HEAD });
+      T(g, mr, { x: 124, y: 98, size: 26, fill: COL.chalk, weight: 600 });
+    });
+  }],
+
+  ['small', 'A Small Improvement', (m) => {
+    const p = panel(0);
+    title(p, '🌱 A Small Improvement', .1, 100, CORAL);
+    const dc = kcard(p, 100, 160, 760, 560, CORAL); tw(dc, { o: 1 }, .5, .4);
+    T(dc, 'आज स्वतःसाठी एक छोटा निर्णय घ्या.', { x: 380, y: 54, size: 30, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+    T(dc, 'फक्त एकच गोष्ट. सगळं एकाच वेळी बदलायची गरज नाही.', { x: 380, y: 92, size: 22, fill: COL.dim, weight: 700, anchor: 'middle' });
+    const rows = [['i1', 'आज 10 मिनिटं वाचेन.'], ['i2', 'माझी जागा स्वतः आवरेन.'], ['i3', 'अभ्यासाच्या वेळी मोबाईल बाजूला ठेवेन.'], ['i4', 'कोणीतरी बोलताना नीट ऐकेन.'], ['i5', 'माझं काम वेळेवर पूर्ण करेन.']].map(([mark, s], i) => {
+      const c = kmCheck(dc, s, 60, 150 + i * 70, CORAL, { size: 26 }); show(c, m(mark), .3); return c;
+    });
+    show(rows[0]._tick, m('mine'), .2); pulse(rows[0], m('mine', .2), 1.04);
+    const mn = T(dc, 'छोटा बदल. पण माझा स्वतःचा निर्णय.', { x: 380, y: 520, size: 28, fill: CORAL, weight: 800, anchor: 'middle', font: SCRIPT, o: 0 });
+    show(mn, m('mine', .5));
+    // the night-time challenge
+    const ch = kcard(p, 920, 160, 580, 560, PLUM, { fill: '#f5f3ff' }); tw(ch, { o: 1 }, m('chal'), .4);
+    T(ch, '🌙 आजची Self-Discovery Challenge', { x: 290, y: 54, size: 26, fill: PLUM, weight: 800, anchor: 'middle', font: HEAD });
+    T(ch, 'आज रात्री झोपण्यापूर्वी स्वतःला तीन प्रश्न विचारा:', { x: 290, y: 92, size: 21, fill: COL.dim, weight: 700, anchor: 'middle' });
+    [['c1', 'आज मी काय नवीन शिकलो?'], ['c2', 'आज मला स्वतःबद्दल काय नवीन कळलं?'], ['c3', 'उद्या मी एक छोटी कोणती गोष्ट चांगली करणार?']].forEach(([mark, s], i) => {
+      const g = G(ch, { x: 40, y: 160 + i * 110, o: 0 });
+      mk('circle', { cx: 24, cy: 10, r: 24, fill: PLUM }, g); T(g, String(i + 1), { x: 24, y: 20, size: 26, fill: '#fff', weight: 800, anchor: 'middle' });
+      const words = s.split(' '), half = Math.ceil(words.length / 2);
+      T(g, words.slice(0, half).join(' '), { x: 66, y: 4, size: 24, fill: COL.chalk, weight: 700 });
+      T(g, words.slice(half).join(' '), { x: 66, y: 38, size: 24, fill: COL.chalk, weight: 700 });
+      tw(g, { o: 1 }, m(mark), .4);
+    });
+    const ans = T(ch, 'उत्तरं मनात द्या किंवा वहीत लिहा.', { x: 290, y: 520, size: 22, fill: PLUM, weight: 700, anchor: 'middle', o: 0 });
+    show(ans, m('c3', 3.4));
+  }],
+
+  ['day2', 'आज आपण तीन गोष्टी पाहिल्या', (m) => {
+    const p = panel(0);
+    title(p, 'आज आपण तीन वेगवेगळ्या गोष्टी पाहिल्या.', .1, 100, CORAL);
+    [['num', SAFF, '🔢', 'Numbers', ['जग मोजायला आणि', 'समजायला मदत']],
+     ['soc', SKY, '🌍', 'Society', ['माणसं, त्यांचं जीवन,', 'एकमेकांशी संबंध']],
+     ['me', CORAL, '🪞', 'Knowing Myself', ['आवडी, ताकदी, भावना', 'आणि स्वप्नांकडे पाहणं']]].forEach(([mark, color, e, head, lines], i) => {
+      const x = 110 + i * 470;
+      const c = kcard(p, x, 160, 440, 300, color); tw(c, { o: 1 }, i ? m(mark) : .6, .4);
+      T(c, e, { x: 220, y: 90, size: 60, anchor: 'middle' });
+      T(c, head, { x: 220, y: 160, size: 36, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+      lines.forEach((s, j) => { const t = T(c, s, { x: 220, y: 210 + j * 34, size: 24, fill: COL.chalk, weight: 700, anchor: 'middle', o: 0 }); show(t, m(mark, .4 + j * .3)); });
+    });
+    // tomorrow: inside the body — a lens over the boy, a cell appears
+    note(p, '🔮 उद्याची छोटी उत्सुकता…', 400, 560, m('next'), SAFF, 34, 0);
+    text(p, 'आज आपण स्वतःला पाहिलं. पण आपल्या शरीराच्या आत?', 400, 620, m('next', 1.6), { size: 26, fill: COL.dim, anchor: 'middle', weight: 700 });
+    const b = boy(p, 1020, 860, 1.3); show(b, m('body'), .4);
+    const lens = kmLens(p, 1020, 700, .9); pop(lens, m('body', .6)); tw(lens, { x: 1320, y: 640, s: 1.3 }, m('cell', -.4), .9, io);
+    const cell = G(p, { x: 1320, y: 640, o: 0, s: .3 });
+    mk('ellipse', { rx: 54, ry: 44, fill: '#e9f8ee', stroke: LIVE, 'stroke-width': 4 }, cell); mk('circle', { cx: 10, cy: -4, r: 14, fill: LIVE }, cell);
+    for (let i = 0; i < 6; i++) mk('circle', { cx: Math.cos(i) * 36, cy: Math.sin(i * 1.3) * 26, r: 4, fill: SAFF }, cell);
+    tw(cell, { o: 1, s: 1 }, m('cell', .4), .6, back);
+    text(p, 'सर्वात छोटी जिवंत रचना?', 1320, 790, m('cell', 1.2), { size: 26, fill: LIVE, anchor: 'middle', weight: 800, font: HEAD });
+    dwBanner(p, '🔬 Tomorrow, we go inside the human body…', 500, 780, m('tomorrow'), { w: 760, size: 30, color: LIVE });
+  }],
+
+  ['wrap', 'आज आपण काय शिकलो?', (m) => {
+    const p = panel(0);
+    title(p, 'आज आपण काय शिकलो?', .1, 100, CORAL);
+    [['Knowing Myself = स्वतःला प्रश्न विचारायला शिकणं. आवड · ताकद · सुधारणा.', 'w1', CORAL],
+     ['Interest आणि Ability एकच नाही. “मला अजून जमत नाही.”', 'w2', SKY],
+     ['भावना म्हणजे आदेश नाहीत. थांबा → विचार करा → मग कृती.', 'w3', LIVE],
+     ['Compare less. Improve more. कालच्या स्वतःपेक्षा आज थोडं चांगलं.', 'w4', SAFF]].forEach(([str, mark, color], i) => {
+      const g = G(p, { x: -16, y: 230 + i * 120, o: 0 });
+      mk('circle', { cx: 160, cy: -12, r: 28, fill: color }, g);
+      T(g, String(i + 1), { x: 160, y: -1, size: 28, fill: '#fff', weight: 800, anchor: 'middle' });
+      T(g, str, { x: 214, size: 30, weight: 700 });
+      tw(g, { o: 1, x: 0 }, m(mark), .6);
+    });
+    note(p, 'आता धड्याचा सराव करूया.', 800, 780, m('end'), SAFF, 34, 0);
+  }],
+
+  ['final1', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-selftalk', prompt: ['स्वतःशी बोलण्याचं हे वाक्य— मदत करणारं की थांबवायचं?'],
+    build: grid([
+      { parts: ['“मी काहीच करू शकत नाही.”'], ans: ['stop'], why: 'थांबा. त्याऐवजी— “मी प्रयत्न करू शकतो.”' },
+      { parts: ['“मी शिकू शकतो.”'], ans: ['help'], why: 'हे वाक्य प्रवासाचा भाग— शिकण्याची तयारी.' },
+      { parts: ['“मला अजून जमत नाही.”'], ans: ['help'], why: '“अजून”— practice मुळे ability वाढू शकते.' },
+      { parts: ['“मी इतरांपेक्षा कमी आहे.”'], ans: ['stop'], why: 'तुलना नको. प्रत्येकाचा प्रवास वेगळा. Compare less. Improve more.' },
+      { parts: ['“माझ्यात सुधारण्याची क्षमता आहे.”'], ans: ['help'], why: 'Weakness म्हणजे शिक्कामोर्तब नाही; ती सुधारता येते.' },
+      { parts: ['“मी Maths मध्ये कायमचा कमजोर आहे.”'], ans: ['stop'], why: 'स्वतःला एका नावात बंद करू नका. आज जे जमत नाही, ते उद्या शिकता येतं.' },
+    ], TALK, { multi: false, text: true }),
+  }], done, 'धड्याचा सराव   १ पैकी २') }],
+
+  ['final2', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-compare', prompt: ['“Compare less. Improve more.” म्हणजे काय?'],
+    build: choice([
+      ['मित्रापेक्षा जास्त marks मिळवणं.'],
+      ['दुसऱ्याशी कमी तुलना; कालच्या स्वतःपेक्षा आज थोडं चांगलं होणं.'],
+      ['ज्यात आपण आधीच चांगले आहोत, तेच करत राहणं.'],
+      ['इतरांशी अजिबात बोलू नये.'],
+    ], 1, 'बरोबर! दुसऱ्यापेक्षा पुढे जाण्यापेक्षा— कालच्या स्वतःपेक्षा आज थोडं चांगलं. प्रत्येकाचा प्रवास वेगळा.', [
+      'ते तर जास्त तुलना आहे. मग कोण चांगला? हा प्रश्नच चुकीचा.',
+      null,
+      'Improve more— सुधारत राहणं. आज जे जमत नाही, ते उद्या शिकता येतं.',
+      'तुलना कमी करायची आहे; बोलणं नाही. मैत्री हेही एक मूल्य आहे.',
+    ]),
+  }], done, 'धड्याचा सराव   २ पैकी २') }],
+
+  ['finish', 'पूर्ण', () => { panel(0); }, { ask: finishCard }],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+// used only inside the final1 ask closure
+const TALK = [['help', 'मदत करणारं', LIVE], ['stop', 'थांबवायचं', DEAD]];
+
+boot();
+</script>
+</body>
+</html>

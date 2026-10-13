@@ -78,8 +78,8 @@ const BOOK = {
      "title": "Knowing Myself",
      "subject": "life",
      "subjectName": "जीवनकौशल्य",
-     "ready": false,
-     "minutes": null,
+     "ready": true,
+     "minutes": 14,
      "pages": [
       32,
       39

@@ -1,0 +1,14 @@
+{
+  "name": "नवयान · २० दिवसांचा शिकण्याचा प्रवास",
+  "short_name": "नवयान",
+  "description": "मुलांसाठी मराठी शिकण्याचं पुस्तक — ऐका, पाहा, प्रश्न सोडवा.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8ee",
+  "theme_color": "#f59e0b",
+  "lang": "mr",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

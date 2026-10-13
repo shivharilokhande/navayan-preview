@@ -1,3 +1,5 @@
-# Navayan — Day 1 preview
+# नवयान — २० दिवसांचा शिकण्याचा प्रवास (preview)
 
-Animated, narrated Marathi science lesson (preview build). Open: https://shivharilokhande.github.io/navayan-preview/
+Animated, narrated, interactive Marathi lessons built with Papermorph. Open: https://shivharilokhande.github.io/navayan-preview/
+
+Static site only (HTML, JS, CSS, MP3). Sources and build tools live outside this repo.

@@ -7,8 +7,15 @@
 // Observe aborted incoming transitions before the first rendering opportunity.
 addEventListener('pagereveal', e => e.viewTransition?.ready.catch(() => {}));
 </script>
-<title>नवयान · दिवस १</title>
-<meta name="description" content="नवयान — मुलांसाठी मराठी विज्ञान. दिवस १: माझ्या आजूबाजूच्या जगाची सुरुवात. ऐका, पाहा, प्रश्न विचारा.">
+<title>नवयान · २० दिवसांचा शिकण्याचा प्रवास</title>
+<meta name="description" content="नवयान — मुलांसाठी मराठी शिकण्याचं पुस्तक. २० दिवस, ५५ धडे: विज्ञान, गणित, समाज, English आणि जीवनकौशल्य. ऐका, पाहा, प्रश्न विचारा.">
+<meta property="og:title" content="नवयान · २० दिवसांचा शिकण्याचा प्रवास">
+<meta property="og:description" content="रोज थोडं विज्ञान, गणित, समाज, English आणि जीवनकौशल्य — ऐकत, पाहत, खेळत शिका.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://shivharilokhande.github.io/navayan-preview/og.svg">
+<meta name="theme-color" content="#f59e0b">
+<link rel="manifest" href="manifest.webmanifest">
+<script src="book-data.js"></script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f59e0b'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-size='48' fill='%23ffffff'%3E∞%3C/text%3E%3C/svg%3E">
 <script src="unit-art.js"></script>
 <link rel="expect" href="#ch01" blocking="render">
@@ -161,6 +168,19 @@ main#contents { padding-bottom: 80px; }
 .ch.here:focus-visible { outline-color: var(--c); }
 .ch.here { animation: here 1.8s ease-out .3s; }
 @keyframes here { 0% { box-shadow: 0 0 0 0 var(--c); } 25% { box-shadow: 0 0 0 5px var(--c); } 100% { box-shadow: 0 0 0 14px transparent; } }
+/* Subject chips, filter buttons and not-yet-ready lessons. */
+.ch .subj { display: block; margin-bottom: 3px; font: 600 12px/1 var(--ui); letter-spacing: .12em; text-transform: uppercase; color: var(--sc); font-style: normal; }
+.ch.s-sci { --sc: #2f9e63; } .ch.s-math { --sc: #f59e0b; } .ch.s-eng { --sc: #7c3aed; } .ch.s-soc { --sc: #3b82f6; } .ch.s-life { --sc: #e0524d; }
+.ch { border-left-color: var(--sc, var(--c)); }
+.ch b { color: var(--sc, var(--c)); }
+.ch.soon { opacity: .55; background: transparent; border-style: dashed; cursor: default; }
+.ch.soon:hover { transform: none; box-shadow: none; border-color: var(--edge); border-left-color: var(--sc); }
+.ch.hid, .unit.hid { display: none; }
+.daydone { margin-left: 8px; font: 700 20px var(--ui); color: var(--good); font-style: normal; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { padding: 5px 12px; border-radius: 999px; border: 2px solid var(--edge); background: #fff; color: var(--chalk); font: 600 14px var(--ui); cursor: pointer; transition: border-color .2s, background-color .2s, color .2s; }
+.filters button:hover { border-color: var(--c); }
+.filters button[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; }
 .stagger .top { animation: rise .6s var(--ease) backwards; }
 .stagger .unit h2, .stagger .ch { animation: rise .6s var(--ease) backwards; animation-delay: calc(min(var(--i), 14) * 32ms + 80ms); }
 
@@ -192,16 +212,19 @@ main#contents { padding-bottom: 80px; }
 <section id="cover">
   <div class="chalk" aria-hidden="true"><!-- a few faint formulas or phrases from the book, drawn in chalk -->
     <span style="left:6%;top:14%;--d:1.6">यातलं जिवंत काय आहे?</span>
-    <span style="right:7%;top:18%;--d:1.9">थांबा… आणि पाहा!</span>
-    <span style="left:5%;bottom:20%;--d:2.2">हालचाल म्हणजेच जीवन नाही</span>
-    <span style="right:6%;bottom:15%;--d:2.5">पान म्हणजे छोटंसं स्वयंपाकघर</span>
+    <span style="right:7%;top:18%;--d:1.9">Why do we need numbers?</span>
+    <span style="left:5%;bottom:20%;--d:2.2">Hello, English!</span>
+    <span style="right:6%;bottom:15%;--d:2.5">माझं डिजिटल जग</span>
+    <span style="left:12%;top:34%;--d:2.8">Sharing the Bhakri</span>
+    <span style="right:14%;bottom:36%;--d:3.1">एक पेशी, अनेक कामे</span>
+    <span style="left:40%;bottom:9%;--d:3.4">Working in a Team</span>
   </div>
   <svg class="mascot draw" id="guide" width="210" height="147"></svg>
-  <p class="kicker">नवयान · मुलांसाठी मराठी विज्ञान</p>
-  <h1>माझ्या आजूबाजूच्या <i>जगाची</i> सुरुवात</h1>
-  <p class="lede">पहाटे गाव जागं होतं. गाय, कुत्रा, चिमणी, झाड… आणि एक दगड. यातलं जिवंत काय? ऐका, पाहा, आणि स्वतः ठरवा.</p>
+  <p class="kicker">नवयान · मुलांसाठी शिकण्याचं पुस्तक</p>
+  <h1>२० दिवसांचा <i>शिकण्याचा</i> प्रवास</h1>
+  <p class="lede">रोज थोडं विज्ञान, थोडं गणित, समाज, English आणि जीवनकौशल्य — वेगवेगळे विषय वेगळे न शिकता, एका गोष्टीसारखे. ऐका, पाहा, प्रश्न सोडवा, आणि स्वतः ठरवा.</p>
   <div class="acts">
-    <a class="btn go" href="#contents">धडा उघडा<svg viewBox="0 0 16 16"><path d="M6 2.5 11.5 8 6 13.5 4.6 12.1 8.7 8 4.6 3.9z"/></svg></a>
+    <a class="btn go" href="#contents">पुस्तक उघडा<svg viewBox="0 0 16 16"><path d="M6 2.5 11.5 8 6 13.5 4.6 12.1 8.7 8 4.6 3.9z"/></svg></a>
     <a class="btn quiet" id="resume" hidden></a>
   </div>
   <p class="meta" id="meta"></p>
@@ -209,7 +232,8 @@ main#contents { padding-bottom: 80px; }
 
 <main id="contents">
   <header class="top">
-    <a class="home" href="#book" aria-label="Back to the cover"><svg class="mascot" id="guideSmall" width="52" height="36"></svg><strong>नवयान · <i>दिवस १</i></strong></a>
+    <a class="home" href="#book" aria-label="Back to the cover"><svg class="mascot" id="guideSmall" width="52" height="36"></svg><strong>नवयान · <i>२० दिवस</i></strong></a>
+    <nav class="filters" id="filters" aria-label="विषय"></nav>
     <span class="prog" id="prog"></span>
   </header>
   <div id="units"></div>
@@ -217,11 +241,12 @@ main#contents { padding-bottom: 80px; }
 
 <script>
 'use strict';
-// Chapters are numbered in order through the units. Add a chapter here when its lesson is ready.
-const UNITS = [   // [unit title, [[chapter title, minutes], ...]]; chapters are numbered in order. Add a chapter when its lesson is ready.
-  ['दिवस १', [['माझ्या आजूबाजूच्या जगाची सुरुवात', 8]]],
-];
-const HUES = ['#f59e0b', '#2f9e63', '#3b82f6', '#7c3aed', '#e0524d'];
+// Chapters come from book-data.js (generated from the book map): 20 days × lessons, numbered in order.
+// A lesson is clickable only when its page is ready; the rest show as "लवकरच".
+const SUBJ_HUE = { sci: '#2f9e63', math: '#f59e0b', eng: '#7c3aed', soc: '#3b82f6', life: '#e0524d' };
+const MR_NUM = s => String(s).replace(/\d/g, d => '०१२३४५६७८९'[d]);
+const UNITS = BOOK.days.map(d => [`दिवस ${MR_NUM(d.day)} — ${d.title}`, d.chapters.map(c => [c.title, c.minutes, c])]);
+const HUES = BOOK.days.map(d => SUBJ_HUE[d.chapters[0].subject]);
 const id = n => 'ch' + String(n).padStart(2, '0');
 let P = {};
 const BOOK_PROGRESS_KEY = 'animebook:progress:' + new URL('.', location.href).pathname;
@@ -234,20 +259,40 @@ const done = new Set(Array.isArray(P.done) ? P.done.filter(n => Number.isInteger
 // Contents.
 let n = 0, total = 0, i = 0;   // i staggers the entrance, in reading order
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+let ready = 0;
 document.getElementById('units').innerHTML = UNITS.map(([name, chs], u) => {
-  return `<section class="unit" style="--c:${HUES[u % HUES.length]};--i:${i++}"><svg class="unit-art" viewBox="0 0 600 180" aria-hidden="true">${UNIT_ART[u] || ''}</svg><h2><span>भाग ${u + 1}</span>${esc(name)}</h2><div class="grid">` +
-    chs.map(([t, min]) => { n++;
-      const cls = 'ch' + (done.has(n) ? ' done' : '') + (P.last === n ? ' last' : '');
-      return `<a class="${cls}" id="${id(n)}" href="${id(n)}/" style="--i:${i++}"><b>${n}</b><span>${esc(t)}</span><small>${min} मिनिटं</small></a>`;
+  const dayDone = chs.filter(([, , c]) => done.has(c.n)).length;
+  const art = (typeof UNIT_ART === 'function') ? UNIT_ART(BOOK.days[u], SUBJ_HUE) : (UNIT_ART[u] || '');
+  return `<section class="unit" data-day="${u + 1}" style="--c:${HUES[u % HUES.length]};--i:${i++}"><svg class="unit-art" viewBox="0 0 600 180" aria-hidden="true">${art}</svg>` +
+    `<h2><span>दिवस ${MR_NUM(u + 1)}</span>${esc(name.split(' — ')[1] || name)}${dayDone === chs.length ? '<em class="daydone">✓</em>' : ''}</h2><div class="grid">` +
+    chs.map(([t, min, c]) => { n++; if (c.ready) ready++;
+      const cls = 'ch s-' + c.subject + (done.has(n) ? ' done' : '') + (P.last === n ? ' last' : '') + (c.ready ? '' : ' soon');
+      const inner = `<b>${n}</b><span><i class="subj">${esc(c.subjectName)}</i>${esc(t)}</span><small>${c.ready ? (min ? `${MR_NUM(min)} मिनिटं` : 'ऐका व पाहा') : 'लवकरच'}</small>`;
+      return c.ready ? `<a class="${cls}" id="${id(n)}" href="${id(n)}/" style="--i:${i++}" data-subject="${c.subject}">${inner}</a>`
+                     : `<div class="${cls}" id="${id(n)}" style="--i:${i++}" data-subject="${c.subject}" aria-disabled="true">${inner}</div>`;
     }).join('') + '</div></section>';
 }).join('');
 total = n;
+// Subject filter chips (remembered per browser).
+const FILTERS = [['all', 'सर्व'], ['sci', 'विज्ञान'], ['math', 'गणित'], ['eng', 'English'], ['soc', 'समाज'], ['life', 'जीवनकौशल्य']];
+let filter = 'all'; try { filter = localStorage.getItem('navayan:filter') || 'all'; } catch {}
+const fEl = document.getElementById('filters');
+function applyFilter() {
+  fEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === filter));
+  document.querySelectorAll('.ch').forEach(e => e.classList.toggle('hid', filter !== 'all' && e.dataset.subject !== filter));
+  document.querySelectorAll('.unit').forEach(u => u.classList.toggle('hid', ![...u.querySelectorAll('.ch')].some(e => !e.classList.contains('hid'))));
+}
+fEl.innerHTML = FILTERS.map(([k, l]) => `<button type="button" data-f="${k}" style="--c:${SUBJ_HUE[k] || 'var(--chalk)'}">${l}</button>`).join('');
+fEl.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; try { localStorage.setItem('navayan:filter', filter); } catch {} applyFilter(); });
+applyFilter();
 // A unit's sketch draws itself the first time the unit scrolls into view.
 const seen = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('seen'); seen.unobserve(e.target); } }), { threshold: .25 });
 document.querySelectorAll('.unit').forEach(u => seen.observe(u));
 const finished = [...done].filter(k => k <= total).length;
-document.getElementById('prog').innerHTML = finished ? `<b>${finished}</b> of ${total} finished` : `${total} chapter${total === 1 ? '' : 's'}`;
-document.getElementById('meta').textContent = `${total} धडा · आवाजासह`;
+document.getElementById('prog').innerHTML = finished ? `<b>${MR_NUM(finished)}</b> / ${MR_NUM(ready)} धडे पूर्ण` : `${MR_NUM(ready)} धडे तयार · ${MR_NUM(total)} एकूण`;
+document.getElementById('meta').textContent = `${MR_NUM(BOOK.days.length)} दिवस · ${MR_NUM(total)} धडे · ${MR_NUM(ready)} तयार · मराठी आवाजासह`;
+// Offline support: the service worker caches the shell and every lesson the reader opens.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 const last = Number.isInteger(P.last) && document.getElementById(id(P.last));
 if (last) {
   const r = document.getElementById('resume');

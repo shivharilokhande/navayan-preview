@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>२ · Hello, English!</title>
+<link rel="stylesheet" href="../lib/engine.css">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js"></script>
+<script src="audio/mr/timings.js"></script>
+<script>
+'use strict';
+const CHAPTER = { number: 2, title: 'Hello, English!', minutes: 10, language: 'mr' };
+
+/* ---------- palette roles ---------- */
+const PLUM = COL.irr, SKY = COL.whole, LIVE = COL.leaf, SAFF = COL.int, CORAL = '#e0524d', DEAD = COL.stone, BARK = COL.bark;
+// one colour per sentence pattern, kept through the chapter
+const PAT = { am: PLUM, name: SKY, live: LIVE, like: SAFF, want: CORAL };
+
+/* ---------- text helpers (as in ch01) ---------- */
+const text = (p, str, x, y, t0, { size = 32, fill = COL.chalk, anchor = 'start', weight = 500, font = UI } = {}) => {
+  const e = T(p, str, { x, y, size, fill, anchor, weight, font, o: 0 }); show(e, t0); return e;
+};
+const title = (p, str, t0 = .1, y = 120, fill = PLUM) => text(p, str, 800, y, t0, { size: 56, weight: 800, anchor: 'middle', font: HEAD, fill });
+const note = (p, str, x, y, t0, fill = SAFF, size = 36, r = -3) => {
+  const g = G(p, { x, y, o: 0, r }); T(g, str, { size, fill, font: SCRIPT, weight: 700, anchor: 'middle' }); show(g, t0); return g;
+};
+function label(p, str, x, y, t0, color = COL.chalk, size = 26) { return text(p, str, x, y, t0, { size, fill: color, anchor: 'middle', weight: 700 }); }
+function bubble(p, str, x, y, t0, { w = 420, color = SAFF, size = 30, font = UI } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  mk('path', { d: `M${-w / 2} -40h${w}a16 16 0 0 1 16 16v56a16 16 0 0 1-16 16h${-w / 2 + 40}l-24 26v-26h${-w / 2 + 8}a16 16 0 0 1-16-16v-56a16 16 0 0 1 16-16z`, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 12, size, fill: COL.chalk, weight: 600, anchor: 'middle', font });
+  pop(g, t0); return g;
+}
+function kcard(p, x, y, w, h, color, { o = 0, s = 1, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o, s });
+  mk('rect', { x: 0, y: 0, width: w, height: h, rx: 22, fill, stroke: COL.edge || '#f1e4d0', 'stroke-width': 2 }, g);
+  mk('path', { d: `M22 0h-4a18 18 0 0 0-18 18v${h - 36}a18 18 0 0 0 18 18h4z`, fill: color }, g);
+  return g;
+}
+
+/* ---------- drawn things (around (0,0) on the baseline); en- prefix avoids engine names ---------- */
+function tree(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-14 0V-90q0-14 14-14q14 0 14 14V0z', fill: BARK }, g);
+  mk('circle', { cx: 0, cy: -150, r: 70, fill: COL.leaf2 }, g);
+  mk('circle', { cx: -52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 52, cy: -120, r: 48, fill: COL.leaf }, g);
+  mk('circle', { cx: 0, cy: -110, r: 50, fill: COL.leaf2 }, g);
+  return g;
+}
+// a child: boy or girl, shirt colour, optional waving arm
+function enKid(p, x, y, s = 1, { shirt = SKY, girl = false, wave = false } = {}) {
+  const g = G(p, { x, y, s, o: 0 });
+  if (girl) {
+    mk('path', { d: 'M-22 -120h44l16 74h-76z', fill: shirt }, g);
+    mk('rect', { x: -18, y: -48, width: 14, height: 48, rx: 6, fill: '#f1c7a0' }, g); mk('rect', { x: 4, y: -48, width: 14, height: 48, rx: 6, fill: '#f1c7a0' }, g);
+    mk('rect', { x: -20, y: -8, width: 18, height: 8, rx: 3, fill: '#6b4f3a' }, g); mk('rect', { x: 2, y: -8, width: 18, height: 8, rx: 3, fill: '#6b4f3a' }, g);
+  } else {
+    mk('rect', { x: -22, y: -120, width: 44, height: 70, rx: 14, fill: shirt }, g);
+    mk('rect', { x: -20, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g); mk('rect', { x: 3, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g);
+  }
+  mk('circle', { cx: 0, cy: -146, r: 30, fill: '#f1c7a0' }, g);
+  if (girl) {
+    mk('path', { d: 'M-30 -150q0-32 30-32q30 0 30 32l8 48h-16l-8-44q-14 8-28 8q-14 0-28-8l-8 44h-16z', fill: '#2b2a33' }, g);
+    mk('circle', { cx: 24, cy: -168, r: 7, fill: CORAL }, g);
+  } else {
+    mk('path', { d: 'M-30 -152q4-30 30-30q26 0 30 30q-18-10-30-6q-12-4-30 6z', fill: '#2b2a33' }, g);
+  }
+  mk('circle', { cx: -10, cy: -148, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 10, cy: -148, r: 3.5, fill: COL.chalk }, g);
+  mk('path', { d: 'M-9 -134q9 8 18 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('path', { d: wave ? 'M-22 -108l-18 30M22 -108l36 -28' : 'M-22 -108l-18 30M22 -108l18 30', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+  return g;
+}
+// a sentence brick: rounded box with a word or phrase, centred on (x,y)
+function enBrick(p, str, x, y, color, { size = 36, w, h = 70, fill = '#fff', dash = false, s = .8 } = {}) {
+  const ww = w || Math.max(90, Math.round(str.length * size * .56) + 44);
+  const g = G(p, { x, y, o: 0, s });
+  const a = { x: -ww / 2, y: -h / 2, width: ww, height: h, rx: 16, fill, stroke: color, 'stroke-width': 3 };
+  if (dash) a['stroke-dasharray'] = '12 9';
+  mk('rect', a, g);
+  T(g, str, { y: size * .36, size, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  g._w = ww; return g;
+}
+// a row of bricks from a left edge; items [{t, color, dash, w}]; pops them in order. returns bricks (with ._cx)
+function enBricks(p, items, x0, y, t0, { size = 36, gap = 14, step = .35, at } = {}) {
+  let x = x0;
+  return items.map((it, i) => {
+    const ww = it.w || Math.max(90, Math.round(it.t.length * size * .56) + 44);
+    const b = enBrick(p, it.t, x + ww / 2, y, it.color, { size, w: ww, dash: it.dash, fill: it.fill || '#fff' });
+    b._cx = x + ww / 2; x += ww + gap;
+    pop(b, t0 + i * step);
+    if (at != null) pulse(b, at + i * .25, 1.1);   // the words are named: each brick nods in turn
+    return b;
+  });
+}
+// an English sentence with its Marathi meaning under it
+function enPair(p, en, mr, x, y, t0, { color = PLUM, size = 40, anchor = 'start', mrSize } = {}) {
+  const g = G(p, { x: x - 18, y, o: 0 });
+  T(g, en, { size, fill: color, weight: 800, font: HEAD, anchor });
+  if (mr) T(g, mr, { y: size * .95, size: mrSize || Math.round(size * .65), fill: COL.dim, weight: 600, anchor });
+  tw(g, { o: 1, x }, t0, .5, out); return g;
+}
+// pattern formula bar: "I + am + information"
+function enFormula(p, parts, color, x, y, t0, { w = 760 } = {}) {
+  const g = G(p, { x, y, o: 0, s: .85 });
+  mk('rect', { x: -w / 2, y: -46, width: w, height: 92, rx: 46, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  T(g, parts.join('  +  '), { y: 14, size: 38, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  pop(g, t0); return g;
+}
+// a hut, a row of city buildings, an ID card, a microphone, a signpost
+function enHouse(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -110, y: -120, width: 220, height: 120, rx: 8, fill: '#fde68a', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-130 -120L0 -210L130 -120z', fill: '#c2410c' }, g);
+  mk('rect', { x: -26, y: -70, width: 52, height: 70, rx: 6, fill: BARK }, g);
+  mk('rect', { x: 40, y: -96, width: 44, height: 40, rx: 4, fill: COL.sky, stroke: BARK, 'stroke-width': 2 }, g);
+  return g;
+}
+function enCity(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  [[-150, 160, '#cbd5e1'], [-60, 230, '#94a3b8'], [50, 190, '#cbd5e1'], [130, 120, '#94a3b8']].forEach(([bx, bh, f]) => {
+    mk('rect', { x: bx, y: -bh, width: 80, height: bh, rx: 4, fill: f, stroke: '#475569', 'stroke-width': 2 }, g);
+    for (let r = 0; r < Math.floor(bh / 40); r++) for (let c = 0; c < 2; c++) mk('rect', { x: bx + 14 + c * 32, y: -bh + 14 + r * 40, width: 20, height: 18, rx: 2, fill: '#fef3c7' }, g);
+  });
+  return g;
+}
+function enIdCard(p, x, y, s = 1, color = SKY) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -130, y: -84, width: 260, height: 168, rx: 16, fill: '#fff', stroke: color, 'stroke-width': 4 }, g);
+  mk('rect', { x: -130, y: -84, width: 260, height: 34, rx: 16, fill: color }, g); mk('rect', { x: -130, y: -60, width: 260, height: 10, fill: color }, g);
+  mk('rect', { x: -108, y: -32, width: 80, height: 92, rx: 10, fill: COL.sky }, g);
+  mk('circle', { cx: -68, cy: -4, r: 16, fill: '#f1c7a0' }, g); mk('path', { d: 'M-98 52q0-34 30-34q30 0 30 34z', fill: color }, g);
+  [[-10, 170], [20, 120], [50, 140]].forEach(([ly, lw]) => mk('rect', { x: -14, y: ly - 6, width: lw * .7, height: 12, rx: 6, fill: '#e2e8f0' }, g));
+  return g;
+}
+function enMic(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  // stand, handle, capsule head with a grille, and sound waves
+  mk('path', { d: 'M-50 0h100', stroke: DEAD, 'stroke-width': 8, 'stroke-linecap': 'round' }, g);
+  mk('rect', { x: -9, y: -70, width: 18, height: 70, rx: 6, fill: DEAD }, g);
+  mk('path', { d: 'M-44 -130v30a44 44 0 0 0 88 0v-30', stroke: '#6b7280', 'stroke-width': 7, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('rect', { x: -30, y: -210, width: 60, height: 110, rx: 30, fill: PLUM }, g);
+  for (let i = 0; i < 4; i++) mk('path', { d: `M-22 ${-190 + i * 22}h44`, stroke: '#fff', 'stroke-width': 3, opacity: .55 }, g);
+  mk('path', { d: 'M50 -190q24 34 0 68M-50 -190q-24 34 0 68', stroke: PLUM, 'stroke-width': 4, fill: 'none', 'stroke-linecap': 'round', opacity: .6 }, g);
+  mk('path', { d: 'M74 -206q40 50 0 100M-74 -206q-40 50 0 100', stroke: PLUM, 'stroke-width': 4, fill: 'none', 'stroke-linecap': 'round', opacity: .3 }, g);
+  return g;
+}
+function enSign(p, str, x, y, color, t0) {
+  const g = G(p, { x, y, o: 0, s: .8 });
+  mk('rect', { x: -4, y: -120, width: 8, height: 120, fill: BARK }, g);
+  mk('path', { d: 'M-90 -128h170l20 22l-20 22h-170z', fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { x: -2, y: -96, size: 26, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  pop(g, t0); return g;
+}
+// chat bubble for the conversation: side 'l' (left speaker) or 'r'
+function enChat(p, str, y, side, color, t0, { size = 28 } = {}) {
+  const w = Math.round(str.length * size * .5) + 44, x = side === 'l' ? 420 : 1180 - w;
+  const g = G(p, { x, y, o: 0 });
+  mk('rect', { x: 0, y: -34, width: w, height: 52, rx: 18, fill: side === 'l' ? '#fff' : color, stroke: color, 'stroke-width': 2.5 }, g);
+  mk('path', { d: side === 'l' ? 'M4 -2l-16 14l20-2z' : `M${w - 4} -2l16 14l-20-2z`, fill: side === 'l' ? '#fff' : color, stroke: color, 'stroke-width': 2.5 }, g);
+  T(g, str, { x: 22, y: 4, size, fill: side === 'l' ? COL.chalk : '#fff', weight: 600 });
+  put(g, { x: x + (side === 'l' ? -20 : 20) }); tw(g, { o: 1, x }, t0, .4, out);
+  return g;
+}
+const ground = (p, y = 700, t0 = .1) => { const l = path(p, `M80 ${y}H1520`, { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(l, t0, 1); return l; };
+// a plum underline blank
+const enBlank = (p, x, y, w, color = PLUM) => mk('path', { d: `M${x} ${y}h${w}`, stroke: color, 'stroke-width': 4, 'stroke-linecap': 'round', 'stroke-dasharray': '10 8' }, p);
+
+/* ---------- beats ---------- */
+const BEATS = [
+  ['intro', 'Hello, English!', (m, D) => {
+    const p = panel(0);
+    const bg = mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: '#f5effe' }, p); put(bg, { o: 0 }); tw(bg, { o: 1 }, 0, 1);
+    const g = G(p, { o: 0, y: 24 });
+    T(g, 'नवयान · दिवस १ · धडा २ · English', { x: 800, y: 250, size: 26, fill: SAFF, weight: 700, anchor: 'middle' });
+    T(g, 'Hello, English!', { x: 800, y: 420, size: 128, fill: PLUM, weight: 800, anchor: 'middle', font: HEAD });
+    tw(g, { o: 1, y: 0 }, .3, 1.1, out);
+    [['Hello!', 240, 300, SKY, 220], ['Hi!', 1360, 280, SAFF, 160], ['Good morning!', 1300, 640, LIVE, 360], ['My name is…', 290, 660, CORAL, 320]]
+      .forEach(([s, x, y, c, w], i) => bubble(p, s, x, y, m('hello', i * .3), { w, color: c, size: 32, font: HEAD }));
+    text(p, 'आज आपण स्वतःची ओळख English मध्ये करून देऊ.', 800, 560, m('sub'), { size: 40, fill: COL.dim, anchor: 'middle', font: SCRIPT, weight: 700 });
+  }],
+
+  ['known', 'Let us begin with simple English', (m) => {
+    const p = panel(0);
+    title(p, 'Let us begin with simple English', .1);
+    text(p, 'आपण आधीच अनेक English words वापरतो.', 800, 190, .5, { size: 30, fill: COL.dim, anchor: 'middle' });
+    const words = ['School', 'book', 'pen', 'bus', 'mobile', 'teacher', 'Market', 'hospital', 'doctor'];
+    const pos = [[330, 320], [620, 290], [900, 330], [1200, 300], [430, 470], [760, 480], [1080, 460], [1340, 470], [600, 630]];
+    const chips = words.map((w, i) => { const b = enBrick(p, w, pos[i][0], pos[i][1], PLUM, { size: 38, h: 76 }); pop(b, m('w' + (i + 1))); return b; });
+    const nn = note(p, 'English आपल्यासाठी नवीन नाही!', 1100, 650, m('new', .3), SAFF, 40); hide(nn, m('build'), .4);
+    // words gather into a pile, an arrow, and a sentence appears
+    chips.forEach((b, i) => tw(b, { x: 300 + (i % 3) * 26 - 26, y: 540 + Math.floor(i / 3) * 44 - 70, s: .8 }, m('build'), .9, io));
+    const wl = label(p, 'words', 300, 650, m('build', .9), PLUM, 30);
+    const ar = path(p, 'M470 500H700', { stroke: COL.dim, 'stroke-width': 5 }, { d: 0 }); draw(ar, m('build', 1), .6);
+    const ah = mk('path', { d: 'M690 486l20 14-20 14', stroke: COL.dim, 'stroke-width': 5, fill: 'none' }, p); put(ah, { o: 0 }); show(ah, m('build', 1.5), .2);
+    const card = kcard(p, 740, 420, 700, 170, PLUM); tw(card, { o: 1 }, m('build', 1.7), .5);
+    T(card, 'I am a student.', { x: 60, y: 76, size: 46, fill: PLUM, weight: 800, font: HEAD });
+    T(card, 'मी विद्यार्थी आहे.', { x: 60, y: 128, size: 28, fill: COL.dim, weight: 600 });
+    label(p, 'sentences', 1090, 640, m('build', 2), PLUM, 30);
+    note(p, 'चला, सुरुवात करूया!', 800, 790, m('go'), PLUM, 44);
+  }],
+
+  ['iam', 'I am…', (m) => {
+    const p = panel(0);
+    title(p, 'I am…', .1, 110, PAT.am);
+    text(p, 'सगळ्यात उपयोगी sentence patterns पैकी एक', 800, 170, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const bricks = enBricks(p, [{ t: 'I', color: PAT.am }, { t: 'am', color: PAT.am }, { t: '________', color: PAT.am, dash: true, w: 300 }], 120, 280, .6, { size: 40, at: m('pat') });
+    const slot = bricks[2]._cx;
+    const ex = [['a student', 'मी विद्यार्थी आहे.'], ['a boy', 'मी मुलगा आहे.'], ['a girl', 'मी मुलगी आहे.'], ['happy', 'मी आनंदी आहे.']];
+    let prev = null;
+    ex.forEach(([en, mr], i) => {
+      const t0 = m('s' + (i + 1));
+      const b = enBrick(p, en, slot, 280, PAT.am, { size: 40, w: 300, fill: '#f5effe' });
+      if (prev) hide(prev, t0, .3);
+      pop(b, t0 + .1); prev = b;
+      enPair(p, 'I am ' + en + '.', mr, 140 + (i % 2) * 460, 420 + Math.floor(i / 2) * 150, t0 + .4, { color: PAT.am, size: 40 });
+    });
+    const boyK = enKid(p, 1300, 700, 1.4); show(boyK, .8, .5);
+    const book = G(p, { x: 1240, y: 600, o: 0 }); mk('rect', { x: -22, y: -16, width: 44, height: 32, rx: 4, fill: SAFF, stroke: BARK, 'stroke-width': 2 }, book); mk('path', { d: 'M0 -16v32', stroke: BARK, 'stroke-width': 2 }, book); show(book, m('s1', .3), .3); hide(book, m('s2'), .3);
+    const girlK = enKid(p, 1300, 700, 1.4, { shirt: CORAL, girl: true }); hide(boyK, m('s3'), .3); show(girlK, m('s3'), .4);
+    for (let i = 0; i < 5; i++) { const sp = T(p, '✦', { x: 1180 + i * 60, y: 420 + (i % 2) * 40, size: 34, fill: SAFF, anchor: 'middle', o: 0 }); put(sp, { s: 0 }); pop(sp, m('s4', .2 + i * .12)); }
+    const smile = text(p, 'happy!', 1300, 400, m('s4', .5), { size: 34, fill: SAFF, font: SCRIPT, weight: 700, anchor: 'middle' });
+    const gl = path(p, 'M1120 700H1500', { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(gl, .2, .8);
+    enFormula(p, ['I', 'am', 'information'], PAT.am, 560, 790, m('rule', .4), { w: 820 });
+    note(p, 'स्वतःबद्दल अनेक sentences!', 1300, 850, m('rule', 2.4), SAFF, 32);
+  }],
+
+  ['name', 'My name is…', (m) => {
+    const p = panel(0);
+    title(p, 'My name is…', .1, 110, PAT.name);
+    text(p, 'introduction मधील एक महत्त्वाचे sentence', 800, 170, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const idc = enIdCard(p, 300, 330, 1, PAT.name); pop(idc, .5);
+    enBricks(p, [{ t: 'My name is', color: PAT.name }, { t: '________', color: PAT.name, dash: true, w: 260 }], 500, 280, .6, { size: 40, at: m('pat') });
+    const kid = enKid(p, 300, 720, 1.2); show(kid, m('amol'), .4);
+    label(p, 'Amol', 300, 770, m('amol', .2), PAT.name, 30);
+    bubble(p, 'My name is Amol.', 560, 520, m('amol', .4), { w: 400, color: PAT.name, size: 34, font: HEAD });
+    text(p, 'माझे नाव अमोल आहे.', 560, 600, m('amol', 1.4), { size: 28, fill: COL.dim, anchor: 'middle' });
+    const you = enBrick(p, 'तुमचे नाव', 912, 280, SAFF, { size: 32, w: 260, fill: '#fff7e6' }); pop(you, m('you', .6));
+    pulse(you, m('you', 1.4), 1.12); pulse(you, m('you', 2.2), 1.12);
+    // the introduction card on the right
+    const card = kcard(p, 900, 380, 640, 330, PAT.name); tw(card, { o: 1 }, m('two', -.2), .5);
+    const lines = [['My name is Amol.', PAT.name, m('two', -.1)], ['I am a student.', PAT.am, m('two')], ['I study in Class ____.', PLUM, m('three')]];
+    lines.forEach(([s, c, t0], i) => enPair(card, (i + 1) + '.  ' + s, null, 50, 80 + i * 72, t0, { color: c, size: 38 }));
+    const tag = T(card, 'ही एक छोटी introduction!', { x: 320, y: 296, size: 30, fill: SAFF, weight: 700, anchor: 'middle', font: SCRIPT, o: 0 }); show(tag, m('intro', 11.1));
+
+  }],
+
+  ['q1', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-girl', prompt: ['“मी मुलगी आहे.” हे English मध्ये कसे म्हणाल?'],
+    build: choice([
+      ['I am a girl.'],
+      ['My name is girl.'],
+      ['I am girl am.'],
+    ], 0, 'बरोबर! I + am + information. मी = I, आहे = am, मुलगी = a girl.', [
+      null,
+      '“My name is” नंतर नाव येतं. girl हे नाव नाही. “मी … आहे” म्हणजे I am …',
+      'am फक्त एकदाच येतं. Pattern: I + am + information.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['live', 'I live in…', (m) => {
+    const p = panel(0);
+    title(p, 'I live in…', .1, 110, PAT.live);
+    text(p, 'आपण कुठे राहतो हे सांगण्यासाठी', 800, 170, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const gl = path(p, 'M100 640H760', { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(gl, .2, .8);
+    const h = enHouse(p, 300, 640, .9); show(h, .4, .5); const t = tree(p, 520, 640, .7); show(t, .6, .5);
+    const bricks = enBricks(p, [{ t: 'I', color: PAT.live }, { t: 'live in', color: PAT.live }, { t: '________', color: PAT.live, dash: true, w: 280 }], 100, 280, .6, { size: 40, at: m('pat') });
+    const slotX = bricks[2]._cx;
+    const b1 = enBrick(p, 'a village', slotX, 280, PAT.live, { size: 40, w: 280, fill: '#ecfdf5' }); pop(b1, m('village', .1));
+    const mr = text(p, 'मी एका गावात राहतो / राहते.', 100, 360, m('village', 1.2), { size: 28, fill: COL.dim });
+    // Kannad: a signpost by the house
+    const sg = enSign(p, 'Kannad', 680, 640, PAT.live, m('kannad', 2.4));
+    const b2 = enBrick(p, 'Kannad', slotX, 280, PAT.live, { size: 40, w: 280, fill: '#ecfdf5' }); hide(b1, m('kannad', 2.3), .3); pop(b2, m('kannad', 2.5));
+    // city: buildings replace the hut; a long name needs a wide brick
+    const city = enCity(p, 380, 640, .9); hide(h, m('city', 2.4), .4); hide(t, m('city', 2.4), .4); hide(sg, m('city', 2.4), .4); show(city, m('city', 2.6), .5);
+    const b3 = enBrick(p, 'Chhatrapati Sambhajinagar', 100 + 90 + 14 + bricks[1]._w + 14 + 300, 280, PAT.live, { size: 32, w: 600, fill: '#ecfdf5' }); hide(b2, m('city', 2.5), .3); pop(b3, m('city', 2.7));
+    hide(mr, m('city', 2.4), .3); text(p, 'शहराचे नाव तसेच लिहा.', 100, 360, m('city', 3.6), { size: 28, fill: COL.dim });
+    // the introduction grows to four lines
+    const card = kcard(p, 900, 400, 640, 400, PAT.live); tw(card, { o: 1 }, m('grow', .6), .5);
+    const lines = [['My name is Amol.', PAT.name, 3.7], ['I am a student.', PAT.am, 6.2], ['I study in Class ____.', PLUM, 8.7], ['I live in a village.', PAT.live, 11.2]];
+    lines.forEach(([s, c, dt], i) => enPair(card, (i + 1) + '.  ' + s, null, 50, 90 + i * 80, m('grow', dt), { color: c, size: 38 }));
+    note(p, 'चार sentences!', 1220, 850, m('grow', 13.9), SAFF, 34);
+  }],
+
+  ['like', 'I like…', (m) => {
+    const p = panel(0);
+    title(p, 'I like…', .1, 110, PAT.like);
+    text(p, 'आपल्याला काय आवडते हे सांगण्यासाठी', 800, 170, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    enBricks(p, [{ t: 'I', color: PAT.like }, { t: 'like', color: PAT.like }, { t: '________', color: PAT.like, dash: true, w: 280 }], 480, 260, .6, { size: 40, at: m('pat') });
+    const items = [['cricket', '🏏'], ['reading', '📖'], ['drawing', '🎨'], ['music', '🎵'], ['science', '🔬']];
+    items.forEach(([w, ic], i) => {
+      const x = 240 + i * 280, g = G(p, { x, y: 420, o: 0, s: .7 });
+      mk('circle', { r: 64, fill: '#fff', stroke: PAT.like, 'stroke-width': 4 }, g);
+      T(g, ic, { y: 20, size: 60, anchor: 'middle' });
+      T(g, 'I like ' + w + '.', { y: 120, size: 32, fill: PAT.like, weight: 800, anchor: 'middle', font: HEAD });
+      pop(g, m('l' + (i + 1)));
+    });
+    enFormula(p, ['I like', 'thing / activity'], PAT.like, 800, 640, m('rule', .2), { w: 720 });
+    const col = (x, head, mr, exs, t0) => {
+      const g = kcard(p, x, 700, 660, 170, PAT.like); tw(g, { o: 1 }, t0, .5);
+      T(g, head, { x: 40, y: 50, size: 30, fill: PAT.like, weight: 800, font: HEAD }); T(g, mr, { x: 380, y: 50, size: 26, fill: COL.dim, weight: 600 });
+      exs.forEach(([s, dt], i) => { const t = T(g, s, { x: 40 + i * 340, y: 118, size: 28, fill: COL.chalk, weight: 700, o: 0 }); show(t, t0 + dt); });
+    };
+    col(110, 'thing', 'वस्तू', [['I like mangoes.', .3], ['I like books.', 2.2]], m('ex', -.3));
+    col(830, 'activity', 'कृती', [['I like playing cricket.', .3], ['I like drawing.', 2.8]], m('ex', 4.9));
+  }],
+
+  ['want', 'I want to…', (m) => {
+    const p = panel(0);
+    title(p, 'I want to…', .1, 110, PAT.want);
+    text(p, 'आपल्याला काय करायचे आहे हे सांगण्यासाठी', 800, 170, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const bricks = enBricks(p, [{ t: 'I', color: PAT.want }, { t: 'want to', color: PAT.want }, { t: '________', color: PAT.want, dash: true, w: 380 }], 100, 260, .6, { size: 40, at: m('pat') });
+    const slotX = bricks[2]._cx;
+    // five stairs climbing to the right; the kid climbs one step per sentence; the slot shows the action
+    const steps = [['learn English', 'मला English शिकायचे आहे.'], ['read', 'मला वाचायचे आहे.'], ['speak English', 'मला English बोलायचे आहे.'], ['become a doctor', 'मला doctor व्हायचे आहे.'], ['become a teacher', 'मला teacher व्हायचे आहे.']];
+    const kid = enKid(p, 180, 800, 1); show(kid, .5, .4);
+    const gl = path(p, 'M80 800H260', { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(gl, .3, .5);
+    let prevB = null, prevM = null;
+    steps.forEach(([act, mr], i) => {
+      const x = 260 + i * 250, top = 800 - i * 95, t0 = m('w' + (i + 1));
+      const st_ = mk('rect', { x, y: top, width: 250, height: 880 - top, rx: 6, fill: i % 2 ? '#fde8e7' : '#fff1f0', stroke: PAT.want, 'stroke-width': 2 }, p); put(st_, { o: 0 }); show(st_, t0, .3);
+      const lb = T(p, act, { x: x + 125, y: top + 48, size: 26, fill: PAT.want, weight: 800, anchor: 'middle', font: HEAD, o: 0 }); show(lb, t0 + .2, .4);
+      tw(kid, { x: x + 125, y: top }, t0, .6, io);
+      const b = enBrick(p, act, slotX, 260, PAT.want, { size: 36, w: 380, fill: '#fff1f0' }); if (prevB) hide(prevB, t0, .3); pop(b, t0 + .1); prevB = b;
+      const mt = text(p, mr, 100, 345, t0 + .6, { size: 28, fill: COL.dim }); if (prevM) hide(prevM, t0, .3); prevM = mt;
+    });
+    const star = T(p, '⭐', { x: 1545, y: 380, size: 56, anchor: 'middle', o: 0 }); put(star, { s: 0 }); pop(star, m('w5', .8));
+    enFormula(p, ['I want to', 'action'], PAT.want, 470, 450, m('rule', .3), { w: 560 });
+  }],
+
+  ['q2', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'c-pat', prompt: ['प्रत्येक शब्दापुढे कोणता pattern येतो?'],
+    build: grid([
+      { parts: ['… a student'], ans: ['am'], why: 'I am a student. मी विद्यार्थी आहे.' },
+      { parts: ['… a village'], ans: ['live'], why: 'I live in a village. गाव म्हणजे जागा; जागेपुढे live in.' },
+      { parts: ['… cricket'], ans: ['like'], why: 'I like cricket. आवडती गोष्ट, म्हणून like.' },
+      { parts: ['… learn English'], ans: ['want'], why: 'I want to learn English. learn ही कृती आहे, म्हणून want to.' },
+      { parts: ['… Riya'], ans: ['name'], why: 'My name is Riya. नावापुढे My name is.' },
+      { parts: ['… happy'], ans: ['am'], why: 'I am happy. स्वतःबद्दल माहिती, म्हणून I am.' },
+    ], [['am', 'I am', PAT.am], ['name', 'My name is', PAT.name], ['live', 'I live in', PAT.live], ['like', 'I like', PAT.like], ['want', 'I want to', PAT.want]], { multi: false, text: true }),
+  }], done, 'छोटी तपासणी') }],
+
+  ['riya', 'Meet Riya', (m) => {
+    const p = panel(0);
+    title(p, 'Meet Riya', .1, 110);
+    text(p, 'शिकलेल्या sentences एकत्र करूया', 800, 170, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const gl = path(p, 'M120 760H560', { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(gl, .3, .6);
+    const riya = enKid(p, 340, 760, 1.6, { shirt: CORAL, girl: true, wave: true }); show(riya, .5, .5);
+    label(p, 'Riya', 340, 820, .8, PLUM, 32);
+    const card = kcard(p, 640, 230, 880, 600, PLUM); tw(card, { o: 1 }, m('r1', -.3), .4);
+    const lines = [['Hello.', PLUM], ['My name is Riya.', PAT.name], ['I am a student.', PAT.am], ['I study in Class ____.', PLUM], ['I live in a village.', PAT.live], ['I like reading books.', PAT.like], ['I like playing badminton.', PAT.like], ['I want to learn English.', PAT.want]];
+    lines.forEach(([s, c], i) => {
+      const g = enPair(card, s, null, 70, 72 + i * 64, m('r' + (i + 1)), { color: c, size: 36 });
+      const d = mk('circle', { cx: 40, cy: 60 + i * 64, r: 9, fill: c }, card); put(d, { o: 0, s: 0 }); pop(d, m('r' + (i + 1)));
+    });
+    bubble(p, 'Hello!', 470, 330, m('r1'), { w: 200, color: PLUM, size: 32, font: HEAD });
+    const tag = G(p, { x: 680, y: 875, o: 0 });
+    T(tag, 'self-introduction', { size: 34, fill: PLUM, weight: 800, font: HEAD }); T(tag, '=  स्वतःची ओळख करून देणे', { x: 330, size: 28, fill: COL.dim, weight: 700 });
+    tw(tag, { o: 1 }, m('self', .3), .5);
+  }],
+
+  ['talk', 'A small conversation', (m) => {
+    const p = panel(0);
+    title(p, 'A small conversation', .1, 100);
+    text(p, 'शाळेच्या सुट्टीत Amol आणि Sameer बोलत होते.', 800, 160, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const gl = path(p, 'M80 860H1520', { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(gl, .3, .8);
+    const amol = enKid(p, 200, 860, 1.5); show(amol, .5, .5); label(p, 'Amol', 200, 895, .8, PAT.name, 30);
+    const sam = enKid(p, 1400, 860, 1.5, { shirt: PLUM }); show(sam, .8, .5); label(p, 'Sameer', 1400, 895, 1, PLUM, 30);
+    const lines = [['l', 'Hello!'], ['r', 'Hello!'], ['l', 'What is your name?'], ['r', 'My name is Sameer. What is your name?'], ['l', 'My name is Amol.'], ['r', 'Where do you live?'],
+      ['l', 'I live in a village.'], ['r', 'What do you like?'], ['l', 'I like cricket. What about you?'], ['r', 'I like drawing.'], ['l', 'Nice!'], ['r', 'Thank you.']];
+    lines.forEach(([side, s], i) => enChat(p, s, 222 + i * 52, side, side === 'l' ? PAT.name : PLUM, m('t' + (i + 1))));
+    note(p, 'छोटा, पण useful!', 800, 893, m('end', 1.2), SAFF, 30, 0);
+  }],
+
+  ['q3', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz({ x: 300, y: 180, w: 1000, cls: 'side', maxH: 540 }, [{
+    id: 'c-where', prompt: ['Sameer विचारतो: “Where do you live?”  Amol काय म्हणेल?'],
+    build: choice([
+      ['I live in a village.'],
+      ['I like cricket.'],
+      ['My name is Amol.'],
+    ], 0, 'बरोबर! Where = कुठे. Where do you live? चे उत्तर I live in … ने सुरू होतं.', [
+      null,
+      'हे उत्तर “What do you like?” चे आहे. Where म्हणजे कुठे.',
+      'हे उत्तर “What is your name?” चे आहे. इथे गाव विचारलं आहे.',
+    ]),
+  }], done, 'छोटी तपासणी') }],
+
+  ['five', 'Five questions you should know', (m) => {
+    const p = panel(0);
+    title(p, 'Five questions you should know', .1, 100);
+    text(p, 'English conversation मध्ये हे questions वारंवार येतात.', 800, 160, .4, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const rows = [['What is your name?', 'My name is ____.', PAT.name], ['Where do you live?', 'I live in ____.', PAT.live], ['How are you?', 'I am fine.  /  I am good.', PAT.am], ['What do you like?', 'I like ____.', PAT.like], ['What do you want to learn?', 'I want to learn ____.', PAT.want]];
+    rows.forEach(([q, a, c], i) => {
+      const y = 260 + i * 125, t0 = m('q' + (i + 1));
+      const n = G(p, { x: 150, y: y - 14, o: 0, s: .5 });
+      mk('circle', { r: 30, fill: c }, n); T(n, String(i + 1), { y: 12, size: 30, fill: '#fff', weight: 800, anchor: 'middle' });
+      pop(n, t0);
+      const g = G(p, { x: -16, y, o: 0 });
+      T(g, q, { x: 210, size: 40, fill: c, weight: 800, font: HEAD });
+      tw(g, { o: 1, x: 0 }, t0 + 1.1, .4);
+      const ar = path(p, `M840 ${y - 14}H896M884 ${y - 26}l14 12-14 12`, { stroke: COL.dim, 'stroke-width': 4, fill: 'none' }, { d: 0 }); draw(ar, t0 + 3, .3);
+      const ans = T(p, a, { x: 930, y, size: 36, fill: COL.chalk, weight: 700, font: HEAD, o: 0 }); show(ans, t0 + 3.3);
+    });
+  }],
+
+  ['yourturn', 'Your turn!', (m) => {
+    const p = panel(0);
+    title(p, 'Your turn!', .1, 110);
+    text(p, 'पुस्तकाकडे पाहू नका. एक मिनिट स्वतःबद्दल English मध्ये बोला.', 800, 170, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const mic = enMic(p, 300, 640, 1.3); pop(mic, .6);
+    const card = kcard(p, 540, 220, 720, 560, PLUM); tw(card, { o: 1 }, m('y1', -.3), .4);
+    const lines = ['Hello. My name is ____.', 'I am a student.', 'I study in Class ____.', 'I live in ____.', 'I like ____.', 'My favourite subject is ____.', 'I want to learn English.'];
+    const texts = lines.map((s, i) => {
+      const t = T(card, s, { x: 60, y: 84 + i * 68, size: 38, fill: PLUM, weight: 800, font: HEAD, o: 0 }); show(t, m('y' + (i + 1)));
+      if (s.includes('____')) { pulse(t, m('y' + (i + 1), .5), 1.02); }
+      return t;
+    });
+    // close the book: the template fades, the badge pops
+    tw(card, { o: .18 }, m('close', .4), .8);
+    const badge = G(p, { x: 1410, y: 500, o: 0, s: .6 });
+    mk('circle', { r: 130, fill: '#fff', stroke: SAFF, 'stroke-width': 6 }, badge);
+    T(badge, '१ मिनिट', { y: -16, size: 48, fill: SAFF, weight: 800, anchor: 'middle', font: HEAD });
+    T(badge, 'आठवणीने बोला!', { y: 40, size: 34, fill: COL.chalk, weight: 700, anchor: 'middle', font: SCRIPT });
+    pop(badge, m('close', 1.2));
+    const ring = mk('circle', { r: 130, fill: 'none', stroke: SAFF, 'stroke-width': 6, 'stroke-dasharray': '817', 'stroke-dashoffset': 817, transform: 'rotate(-90)' }, badge);
+    prog(q => ring.setAttribute('stroke-dashoffset', 817 * (1 - q)), m('close', 1.6), 4, lin);
+  }],
+
+  ['wrap', 'आज आपण काय शिकलो?', (m) => {
+    const p = panel(0);
+    title(p, 'आज आपण काय शिकलो?', .1);
+    [['I am …   स्वतःबद्दल सांगायला', 'w1', PAT.am],
+     ['My name is …  ·  I live in …   नाव आणि गाव', 'w2', PAT.live],
+     ['I like …  ·  I want to …   आवड आणि इच्छा', 'w3', PAT.like],
+     ['Hello … Thank you.   एक छोटा conversation', 'w4', PLUM]].forEach(([str, mark, color], i) => {
+      const g = G(p, { x: -16, y: 250 + i * 120, o: 0 });
+      mk('circle', { cx: 200, cy: -12, r: 28, fill: color }, g);
+      T(g, String(i + 1), { x: 200, y: -1, size: 28, fill: '#fff', weight: 800, anchor: 'middle' });
+      T(g, str, { x: 254, size: 36, weight: 700, font: HEAD, fill: COL.chalk });
+      tw(g, { o: 1, x: 0 }, m(mark), .6);
+    });
+  }],
+
+  ['final1', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-pat2', prompt: ['प्रत्येक मराठी वाक्यासाठी कोणता English pattern वापराल?'],
+    build: grid([
+      { parts: ['मी आनंदी आहे.'], ans: ['am'], why: 'I am happy.' },
+      { parts: ['मी कन्नडमध्ये राहतो.'], ans: ['live'], why: 'I live in Kannad. जागा, म्हणून live in.' },
+      { parts: ['मला चित्र काढायला आवडतं.'], ans: ['like'], why: 'I like drawing. आवड, म्हणून like.' },
+      { parts: ['मला teacher व्हायचे आहे.'], ans: ['want'], why: 'I want to become a teacher. इच्छा, म्हणून want to.' },
+      { parts: ['मी विद्यार्थी आहे.'], ans: ['am'], why: 'I am a student.' },
+      { parts: ['मला वाचायला आवडतं.'], ans: ['like'], why: 'I like reading.' },
+    ], [['am', 'I am', PAT.am], ['live', 'I live in', PAT.live], ['like', 'I like', PAT.like], ['want', 'I want to', PAT.want]], { multi: false, text: true }),
+  }], done, 'धड्याचा सराव   १ पैकी २') }],
+
+  ['final2', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-how', prompt: ['कोणी विचारलं “How are you?” तर तुम्ही काय म्हणाल?'],
+    build: choice([
+      ['I am fine.'],
+      ['My name is fine.'],
+      ['I live in fine.'],
+      ['I like you.'],
+    ], 0, 'बरोबर! How are you? = तू कसा/कशी आहेस? उत्तर: I am fine. किंवा I am good.', [
+      null,
+      'fine हे नाव नाही. My name is नंतर फक्त नाव येतं.',
+      'live in नंतर जागेचे नाव येतं. fine ही जागा नाही.',
+      'हे उत्तर “What do you like?” चे आहे. How are you? ला I am … ने उत्तर द्या.',
+    ]),
+  }], done, 'धड्याचा सराव   २ पैकी २') }],
+
+  ['finish', 'पूर्ण', () => { panel(0); }, { ask: finishCard }],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

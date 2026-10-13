@@ -66,8 +66,8 @@ const BOOK = {
      "title": "Why Do We Study Society?",
      "subject": "soc",
      "subjectName": "समाज",
-     "ready": false,
-     "minutes": null,
+     "ready": true,
+     "minutes": 9,
      "pages": [
       28,
       31

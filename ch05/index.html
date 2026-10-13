@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5 · Why Do We Study Society?</title>
+<link rel="stylesheet" href="../lib/engine.css">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js"></script>
+<script src="audio/mr/timings.js"></script>
+<script>
+'use strict';
+const CHAPTER = { number: 5, title: 'Why Do We Study Society?', minutes: 9, language: 'mr' };
+
+/* ---------- palette roles ---------- */
+const SKY = COL.whole, SAFF = COL.int, GREY = COL.stone, PLUM = COL.irr, LEAF = COL.leaf, BARK = COL.bark, CORAL = '#e0524d', ROSE = '#f472b6';
+
+/* ---------- text helpers (as in ch01) ---------- */
+const text = (p, str, x, y, t0, { size = 32, fill = COL.chalk, anchor = 'start', weight = 500, font = UI } = {}) => {
+  const e = T(p, str, { x, y, size, fill, anchor, weight, font, o: 0 }); show(e, t0); return e;
+};
+const title = (p, str, t0 = .1, y = 110) => text(p, str, 800, y, t0, { size: 50, weight: 800, anchor: 'middle', font: HEAD });
+const note = (p, str, x, y, t0, fill = SKY, size = 36, r = -3) => {
+  const g = G(p, { x, y, o: 0, r }); T(g, str, { size, fill, font: SCRIPT, weight: 700, anchor: 'middle' }); show(g, t0); return g;
+};
+function label(p, str, x, y, t0, color = COL.chalk, size = 26) { return text(p, str, x, y, t0, { size, fill: color, anchor: 'middle', weight: 700 }); }
+function bubble(p, str, x, y, t0, { w = 420, color = SKY, size = 30 } = {}) {
+  const g = G(p, { x, y, o: 0, s: .7 });
+  mk('path', { d: `M${-w / 2} -40h${w}a16 16 0 0 1 16 16v56a16 16 0 0 1-16 16h${-w / 2 + 40}l-24 26v-26h${-w / 2 + 8}a16 16 0 0 1-16-16v-56a16 16 0 0 1 16-16z`, fill: '#fff', stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 12, size, fill: COL.chalk, weight: 600, anchor: 'middle' });
+  pop(g, t0); return g;
+}
+function kcard(p, x, y, w, h, color, { o = 0, s = 1, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o, s });
+  mk('rect', { x: 0, y: 0, width: w, height: h, rx: 22, fill, stroke: COL.edge || '#f1e4d0', 'stroke-width': 2 }, g);
+  mk('path', { d: `M22 0h-4a18 18 0 0 0-18 18v${h - 36}a18 18 0 0 0 18 18h4z`, fill: color }, g);
+  return g;
+}
+// pill banner centred on (x,y)
+function banner(p, str, x, y, t0, { w = 900, color = SKY, size = 36, fill = '#fff' } = {}) {
+  const g = G(p, { x, y, o: 0, s: .8 });
+  mk('rect', { x: -w / 2, y: -44, width: w, height: 88, rx: 44, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 13, size, fill: color, weight: 800, anchor: 'middle', font: HEAD });
+  pop(g, t0); return g;
+}
+// word chip centred on (x,y) (sChip: the engine owns chip())
+function sChip(p, str, x, y, { color = SKY, size = 30, w = 0, fill = '#fff', textFill, font = HEAD } = {}) {
+  const ww = w || Math.max(72, uiW(str, size) + 44);
+  const g = G(p, { x, y, o: 0, s: .6 });
+  mk('rect', { x: -ww / 2, y: -30, width: ww, height: 60, rx: 30, fill, stroke: color, 'stroke-width': 3 }, g);
+  T(g, str, { y: 11, size, fill: textFill || color, weight: 800, anchor: 'middle', font });
+  g._w = ww; return g;
+}
+// a horizontal arrow from x1 to x2 at y, drawn on
+function sArrow(p, x1, x2, y, color, t0, dur = .6) {
+  const d = Math.sign(x2 - x1);
+  draw(path(p, `M${x1} ${y}H${x2}`, { stroke: color, 'stroke-width': 6, 'stroke-linecap': 'round' }, { d: 0 }), t0, dur);
+  show(path(p, `M${x2 - 18 * d} ${y - 13}L${x2} ${y}L${x2 - 18 * d} ${y + 13}`, { stroke: color, 'stroke-width': 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, { o: 0 }), t0 + dur - .1, .2);
+}
+const ground = (p, y = 700, t0 = .1) => { const l = path(p, `M80 ${y}H1520`, { stroke: COL.soil, 'stroke-width': 6 }, { d: 0 }); draw(l, t0, 1); return l; };
+
+/* ---------- drawn things, each around (0,0) on its baseline ---------- */
+function boy(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -22, y: -120, width: 44, height: 70, rx: 14, fill: SKY }, g);
+  mk('rect', { x: -20, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g); mk('rect', { x: 3, y: -52, width: 17, height: 52, rx: 7, fill: '#6b4f3a' }, g);
+  mk('circle', { cx: 0, cy: -146, r: 30, fill: '#f1c7a0' }, g);
+  mk('path', { d: 'M-30 -152q4-30 30-30q26 0 30 30q-18-10-30-6q-12-4-30 6z', fill: '#2b2a33' }, g);
+  mk('circle', { cx: -10, cy: -148, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 10, cy: -148, r: 3.5, fill: COL.chalk }, g);
+  mk('path', { d: 'M-9 -134q9 8 18 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('path', { d: 'M-22 -108l-18 30M22 -108l18 30', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+  return g;
+}
+// a grown-up (from ch04's nPerson): colour = clothes, hair 'long' | 'short'; height 200 at s = 1
+function sPerson(p, x, y, s = 1, color = ROSE, hair = 'long') {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-30 0V-110q0-30 30-30q30 0 30 30V0z', fill: color }, g);
+  mk('circle', { cx: 0, cy: -170, r: 32, fill: '#f1c7a0' }, g);
+  mk('path', { d: hair === 'long' ? 'M-32 -176q4-34 32-34q28 0 32 34q-10-14-32-10q-22-4-32 10zM-32 -176v40q-10-10-6-40zM32 -176v40q10-10 6-40z' : 'M-32 -176q6-32 32-32q26 0 32 32q-16-12-32-8q-16-4-32 8z', fill: '#2b2a33' }, g);
+  mk('circle', { cx: -11, cy: -172, r: 3.5, fill: COL.chalk }, g); mk('circle', { cx: 11, cy: -172, r: 3.5, fill: COL.chalk }, g);
+  mk('path', { d: 'M-10 -158q10 8 20 0', stroke: COL.chalk, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('path', { d: 'M-30 -120l-20 40M30 -120l20 40', stroke: '#f1c7a0', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+  g._face = g.children[1];
+  return g;
+}
+// a small person badge: circle head + body, used in crowds; colour = clothes. ~70 tall
+function sMini(p, x, y, color = SKY, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-22 0V-36q0-18 22-18q22 0 22 18V0z', fill: color }, g);
+  mk('circle', { cy: -70, r: 17, fill: '#f1c7a0' }, g);
+  mk('path', { d: 'M-17 -74q4-18 17-18q13 0 17 18q-8-6-17-4q-9-2-17 4z', fill: '#2b2a33' }, g);
+  return g;
+}
+function sHouse(p, x, y, s = 1, wallFill = '#fde68a') {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -70, y: -80, width: 140, height: 80, rx: 6, fill: wallFill, stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-84 -80L0 -140L84 -80z', fill: '#c2410c' }, g);
+  mk('rect', { x: -16, y: -46, width: 32, height: 46, rx: 4, fill: BARK }, g);
+  mk('rect', { x: 26, y: -64, width: 30, height: 26, rx: 3, fill: COL.sky, stroke: BARK, 'stroke-width': 2 }, g);
+  g._win = g.lastChild;
+  return g;
+}
+function sSchool(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -120, y: -110, width: 240, height: 110, rx: 6, fill: '#fef3c7', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-130 -110L0 -160L130 -110z', fill: SKY }, g);
+  [-80, -30, 50].forEach(wx => mk('rect', { x: wx, y: -84, width: 32, height: 30, rx: 3, fill: COL.sky, stroke: BARK, 'stroke-width': 2 }, g));
+  mk('rect', { x: -14, y: -50, width: 28, height: 50, rx: 3, fill: BARK }, g);
+  mk('path', { d: 'M0 -160V-200l40 10-40 12', fill: SAFF, stroke: SAFF, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  const t = T(g, 'शाळा', { y: -22, x: 70, size: 22, fill: COL.chalk, weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+function sShop(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -90, y: -70, width: 180, height: 70, rx: 6, fill: '#d6b48c', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-100 -70h200l-14 -34h-172z', fill: CORAL }, g);
+  for (let i = 0; i < 5; i++) mk('path', { d: `M${-100 + i * 40} -70l7-34h26l7 34z`, fill: i % 2 ? '#fff' : CORAL }, g);
+  mk('rect', { x: -70, y: -54, width: 140, height: 30, rx: 4, fill: '#fff', stroke: BARK, 'stroke-width': 2 }, g);
+  for (const [cx, c] of [[-50, SAFF], [-25, LEAF], [0, '#ef4444'], [25, SAFF], [50, LEAF]]) mk('circle', { cx, cy: -39, r: 9, fill: c }, g);
+  T(g, 'दुकान', { y: -6, size: 20, fill: '#fff', weight: 800, anchor: 'middle', font: HEAD });
+  return g;
+}
+function sTruck(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -90, y: -80, width: 120, height: 60, rx: 6, fill: SAFF, stroke: COL.chalk, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M30 -80h44l26 34v26H30z', fill: '#fbbf24', stroke: COL.chalk, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  mk('rect', { x: 40, y: -70, width: 28, height: 22, rx: 3, fill: COL.sky }, g);
+  mk('circle', { cx: -56, cy: -16, r: 15, fill: '#2b2a33' }, g); mk('circle', { cx: 66, cy: -16, r: 15, fill: '#2b2a33' }, g);
+  return g;
+}
+function sSack(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-40 0V-70q0-16 16-16h48q16 0 16 16V0z', fill: '#d6b48c', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-16 -86q0-26 16-26q16 0 16 26', stroke: BARK, 'stroke-width': 4, fill: 'none' }, g);
+  for (const [cx, cy] of [[-18, -40], [6, -28], [20, -52], [-8, -16]]) mk('circle', { cx, cy, r: 8, fill: '#f5d27a', stroke: BARK, 'stroke-width': 1.5 }, g);
+  return g;
+}
+// a flour mill: box with a wheel
+function sMill(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -70, y: -90, width: 140, height: 90, rx: 8, fill: '#e5e7eb', stroke: GREY, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-80 -90L0 -130L80 -90z', fill: GREY }, g);
+  const w = G(g, { x: 0, y: -45 });
+  mk('circle', { r: 28, fill: '#fff', stroke: GREY, 'stroke-width': 4 }, w);
+  mk('path', { d: 'M-28 0H28M0 -28V28M-20 -20L20 20M-20 20L20 -20', stroke: GREY, 'stroke-width': 3 }, w);
+  g._wheel = w;
+  return g;
+}
+// plate with a bhakri
+function sPlate(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('ellipse', { rx: 70, ry: 22, fill: '#fff', stroke: GREY, 'stroke-width': 3 }, g);
+  mk('ellipse', { cy: -6, rx: 42, ry: 14, fill: '#f5d27a', stroke: '#d4a24a', 'stroke-width': 2 }, g);
+  for (const [cx, cy] of [[-14, -8], [10, -10], [20, -2]]) mk('circle', { cx, cy, r: 3, fill: '#d4a24a' }, g);
+  return g;
+}
+function sMilkCan(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-18 0V-40q0-10 6-14V-64h24v10q6 4 6 14V0z', fill: '#e5e7eb', stroke: GREY, 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  mk('path', { d: 'M-12 -64h24', stroke: GREY, 'stroke-width': 4 }, g);
+  return g;
+}
+function sField(p, x, y, w = 240, h = 70) {
+  const g = G(p, { x, y, o: 0 });
+  mk('rect', { x: -w / 2, y: -h, width: w, height: h, rx: 14, fill: '#ecfccb', stroke: LEAF, 'stroke-width': 3 }, g);
+  for (let i = 0; i < 6; i++) mk('path', { d: `M${-w / 2 + 30 + i * (w - 60) / 5} ${-h + 16}v${h - 28}`, stroke: LEAF, 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+  return g;
+}
+function sStove(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-34 0V-30q0-10 10-10h48q10 0 10 10V0z', fill: '#b45309', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('path', { d: 'M-10 -40q-8-18 4-30q-2 14 10 18q4-12 10-16q6 16-4 28z', fill: SAFF }, g);
+  const sm = G(g, { o: 0 });
+  mk('path', { d: 'M0 -70q-14-16 0-32q14-16 0-32', stroke: GREY, 'stroke-width': 4, fill: 'none', 'stroke-linecap': 'round' }, sm);
+  g._smoke = sm;
+  return g;
+}
+function sPhone(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -22, y: -80, width: 44, height: 80, rx: 8, fill: '#2b2a33' }, g);
+  mk('rect', { x: -17, y: -72, width: 34, height: 58, rx: 3, fill: COL.sky }, g);
+  mk('circle', { cy: -8, r: 3.5, fill: '#fff' }, g);
+  return g;
+}
+function sBus(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -90, y: -84, width: 180, height: 66, rx: 12, fill: SAFF, stroke: COL.chalk, 'stroke-width': 3 }, g);
+  [-74, -34, 6, 46].forEach(wx => mk('rect', { x: wx, y: -72, width: 30, height: 24, rx: 3, fill: COL.sky }, g));
+  mk('circle', { cx: -54, cy: -16, r: 15, fill: '#2b2a33' }, g); mk('circle', { cx: 54, cy: -16, r: 15, fill: '#2b2a33' }, g);
+  return g;
+}
+function sCart(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('rect', { x: -60, y: -60, width: 110, height: 36, rx: 4, fill: '#d9a066', stroke: BARK, 'stroke-width': 3 }, g);
+  mk('circle', { cx: -30, cy: -18, r: 20, fill: 'none', stroke: BARK, 'stroke-width': 5 }, g);
+  mk('path', { d: 'M50 -46h40l20 20', stroke: BARK, 'stroke-width': 5, fill: 'none', 'stroke-linecap': 'round' }, g);
+  mk('ellipse', { cx: 128, cy: -40, rx: 30, ry: 18, fill: '#f5efe6', stroke: COL.chalk, 'stroke-width': 3 }, g);
+  mk('circle', { cx: 158, cy: -56, r: 12, fill: '#f5efe6', stroke: COL.chalk, 'stroke-width': 3 }, g);
+  [112, 140].forEach(lx => mk('rect', { x: lx - 4, y: -26, width: 8, height: 26, rx: 3, fill: '#e6dccd', stroke: COL.chalk, 'stroke-width': 2 }, g));
+  return g;
+}
+function sTap(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M-10 0V-50h-20v-14h44v14h-14', stroke: GREY, 'stroke-width': 8, fill: 'none', 'stroke-linejoin': 'round' }, g);
+  mk('path', { d: 'M-30 -40q0 14 0 28', stroke: SKY, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);
+  mk('path', { d: 'M-44 0q0-14 14-14q14 0 14 14z', fill: SKY }, g);
+  return g;
+}
+function sBolt(p, x, y, s = 1) {
+  const g = G(p, { x, y, s, o: 0 });
+  mk('path', { d: 'M8 -70L-24 -4h22L-10 50L30 -20H6z', fill: SAFF, stroke: '#d97706', 'stroke-width': 3, 'stroke-linejoin': 'round' }, g);
+  return g;
+}
+function sCross(p, x, y, t0, color = CORAL, r = 26) {
+  const g = G(p, { x, y, o: 0, s: .5 });
+  mk('circle', { r, fill: '#fff', stroke: color, 'stroke-width': 4 }, g);
+  mk('path', { d: `M${-r * .45} ${-r * .45}L${r * .45} ${r * .45}M${r * .45} ${-r * .45}L${-r * .45} ${r * .45}`, stroke: color, 'stroke-width': 5, 'stroke-linecap': 'round' }, g);
+  pop(g, t0); return g;
+}
+function sTick(p, x, y, t0, color = LEAF, r = 26) {
+  const g = G(p, { x, y, o: 0, s: .5 });
+  mk('circle', { r, fill: color }, g);
+  mk('path', { d: `M${-r * .45} 0l${r * .3} ${r * .3}l${r * .55} ${-r * .6}`, stroke: '#fff', 'stroke-width': 5, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+  pop(g, t0); return g;
+}
+
+/* ---------- beats ---------- */
+const BEATS = [
+  ['intro', 'Why Do We Study Society?', (m, D) => {
+    const bg = G(scene, { o: 0 });
+    mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: '#eef5ff' }, bg);
+    // a faint net of people behind the title
+    const pts = []; for (let i = 0; i < 14; i++) pts.push([120 + (i * 331) % 1380, 90 + (i * 223) % 740]);
+    pts.forEach(([x, y], i) => { if (i) mk('path', { d: `M${x} ${y}L${pts[i - 1][0]} ${pts[i - 1][1]}`, stroke: SKY, 'stroke-width': 2, opacity: .12 }, bg); });
+    pts.forEach(([x, y]) => { const mm = sMini(bg, x, y + 36, SKY, .8); put(mm, { o: .14 }); });
+    tw(bg, { o: 1 }, 0, .8);
+    const g = G(scene, { o: 0, y: 24 });
+    T(g, 'नवयान · दिवस २ · धडा ५ · Social Science', { x: 800, y: 210, size: 26, fill: SKY, weight: 700, anchor: 'middle' });
+    T(g, 'Why Do We Study', { x: 800, y: 310, size: 78, weight: 800, anchor: 'middle', font: HEAD });
+    T(g, 'Society?', { x: 800, y: 405, size: 78, weight: 800, anchor: 'middle', font: HEAD, fill: SKY });
+    T(g, 'आपण समाजात का राहतो?', { x: 800, y: 470, size: 38, fill: COL.dim, weight: 700, anchor: 'middle', font: HEAD });
+    tw(g, { o: 1, y: 0 }, .3, 1.1, out);
+    const strip = G(scene, { o: 0 });
+    T(strip, 'दिवस २ · संख्या आणि स्वतःची ओळख', { x: 800, y: 580, size: 26, fill: COL.dim, weight: 700, anchor: 'middle' });
+    [['Maths', 'आपण जग मोजतो', SAFF, false], ['Social Science', 'आपण समाज समजतो', SKY, true], ['Life Skills', 'स्वतःला समजायला सुरुवात', CORAL, false]].forEach(([en, mr, c, lit], i) => {
+      const x = 380 + i * 420, cg = G(strip, { x, y: 650, o: 0, s: .8 });
+      mk('rect', { x: -170, y: -36, width: 340, height: 72, rx: 36, fill: lit ? c : '#fff', stroke: c, 'stroke-width': 3 }, cg);
+      T(cg, en, { y: 12, size: 32, fill: lit ? '#fff' : c, weight: 800, anchor: 'middle', font: HEAD });
+      T(cg, mr, { y: 80, size: 24, fill: COL.dim, weight: 600, anchor: 'middle' });
+      pop(cg, m('day', .2 + i * .9));
+      if (i) sArrow(strip, x - 240, x - 185, 650, COL.faint, m('day', i * .9), .4);
+    });
+    show(strip, m('day'));
+    const r = note(scene, 'समाजाचा अभ्यास का करायचा?', 800, 820, m('sub', 1.8), SKY, 40);
+    tw(g, { o: 0, y: -24 }, D - .9, .8); hide(r, D - .9, .8); hide(strip, D - .9, .8); hide(bg, D - .9, .8);
+  }],
+
+  ['alone', 'तुम्ही एकटे आहात का?', (m) => {
+    const p = panel(0);
+    const q = banner(p, 'तुम्ही एकटे आहात का?', 800, 100, m('alone'), { w: 620, color: SKY, size: 40 });
+    const b = boy(p, 800, 540, 1.1); show(b, .2, .5);
+    const no = note(p, 'नाही.', 800, 620, m('no'), CORAL, 44); 
+    // people around the boy, each at a spot; lines then join them into a net
+    const spots = [
+      ['home', 'घरातले लोक', 420, 300, ROSE], ['nb', 'शेजारी', 1180, 300, SAFF], ['school', 'शाळा', 300, 520, SKY], ['market', 'बाजार', 1300, 520, LEAF],
+      ['farmer', 'शेतकरी', 580, 700, LEAF], ['shop', 'दुकानदार', 1020, 700, SAFF], ['teacher', 'शिक्षक', 800, 240, PLUM], ['doctor', 'डॉक्टर', 1260, 700, CORAL], ['worker', 'कामगार', 340, 700, GREY],
+    ];
+    S.net = [];
+    spots.forEach(([mark, name, x, y, c]) => {
+      const g = G(p, { x, y, o: 0, s: .6 });
+      mk('circle', { r: 50, fill: '#fff', stroke: c, 'stroke-width': 4 }, g);
+      const mm = sMini(g, 0, 28, c, .8); put(mm, { o: 1 });
+      T(g, name, { y: 84, size: 24, fill: c, weight: 800, anchor: 'middle', font: HEAD });
+      pop(g, m(mark));
+      S.net.push([x, y]);
+    });
+    const net = G(p, { o: 0 }); p.insertBefore(net, p.firstChild);
+    const all = [[800, 540], ...S.net];
+    all.forEach(([x, y], i) => all.forEach(([x2, y2], j) => { if (j > i && Math.hypot(x - x2, y - y2) < 560) mk('path', { d: `M${x} ${y - 60}L${x2} ${y2 - 10}`, stroke: SKY, 'stroke-width': 2.5, opacity: .35 }, net); }));
+    show(net, m('net'), 1.2);
+    hide(no, m('net'), .4);
+    const soc = banner(p, 'Society — समाज', 800, 860, m('society'), { w: 520, color: SKY, size: 40, fill: SKY });
+    soc.querySelector('text').setAttribute('fill', '#fff'); 
+  }],
+
+  ['why', 'समाजाचा अभ्यास का करायचा?', (m) => {
+    const p = panel(0);
+    title(p, 'Why Do We Study Society?', .1, 100);
+    const qb = bubble(p, '“समाजाचा अभ्यास का करायचा?”', 800, 200, m('q'), { w: 640, color: SKY, size: 32 });
+    text(p, 'कारण… आपण समाजातच जगतो.', 800, 300, m('q', 1.4), { size: 30, fill: COL.dim, anchor: 'middle' });
+    const items = [['c1', 'एकमेकांशी बोलतो', '💬', SKY], ['c2', 'एकमेकांवर अवलंबून', '🤝', LEAF], ['c3', 'नियम पाळतो', '📏', PLUM], ['c4', 'एकत्र काम करतो', '🧑‍🌾', SAFF], ['c5', 'कधी सहकार्य', '🫶', LEAF], ['c6', 'कधी मतभेद', '⚡', CORAL], ['c7', 'हळूहळू बदल', '🔄', SKY]];
+    items.forEach(([mark, str, ic, c], i) => {
+      const x = 180 + (i % 4) * 413, y = i < 4 ? 440 : 620;
+      const xx = i < 4 ? x : x + 206;
+      const g = G(p, { x: xx, y, o: 0, s: .7 });
+      mk('rect', { x: -170, y: -60, width: 340, height: 120, rx: 22, fill: '#fff', stroke: c, 'stroke-width': 3 }, g);
+      T(g, ic, { y: -4, size: 40, anchor: 'middle' });
+      T(g, str, { y: 44, size: 26, fill: c, weight: 800, anchor: 'middle', font: HEAD });
+      pop(g, m(mark));
+    });
+    const ss = banner(p, 'हे समजून घेणं म्हणजे Social Science.', 800, 790, m('ss'), { w: 900, color: SKY, size: 36 });
+  }],
+
+  ['dawn', 'The Village That Was Already Awake', (m) => {
+    const p = panel(0);
+    const sky = mk('rect', { x: 0, y: 0, width: 1600, height: 900, fill: '#ffe6c2' }, p); put(sky, { o: 0 }); show(sky, 0, .8);
+    mk('path', { d: 'M0 640q400-90 800-40t800 20V900H0z', fill: '#d9ead3' }, p);
+    const sun = G(p, { x: 1420, y: 700, o: 0 }); mk('circle', { r: 56, fill: COL.sun }, sun); show(sun, .2, .4); tw(sun, { y: 300 }, .2, 5, io);
+    title(p, 'The Village That Was Already Awake', .1, 90);
+    text(p, 'पहाट झाली. गाव अजून पूर्णपणे जागं झालं नव्हतं…', 800, 150, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    // field + farmer
+    const fld = sField(p, 260, 660, 300, 80); show(fld, m('farmer'), .4);
+    const farmer = sPerson(p, 60, 660, .7, LEAF, 'short'); show(farmer, m('farmer'), .3); tw(farmer, { x: 200 }, m('farmer', .3), 1.6, io);
+    label(p, 'शेतकरी', 200, 710, m('farmer', .5), LEAF, 24);
+    // houses + milkman
+    const h1 = sHouse(p, 600, 660, .9), h2 = sHouse(p, 800, 660, .9, '#fbcfe8'); show(h1, m('milk'), .3); show(h2, m('milk'), .3);
+    const milk = sPerson(p, 460, 660, .7, '#cbd5e1', 'short'); show(milk, m('milk', .2), .3);
+    const can = sMilkCan(milk, 46, 0, .8); put(can, { o: 1 });
+    tw(milk, { x: 560 }, m('milk', .4), 1, io); tw(milk, { x: 700 }, m('milk', 1.6), 1, io);
+    label(p, 'दूधवाला', 700, 710, m('milk', .6), GREY, 24);
+    // stove with smoke
+    const stove = sStove(p, 980, 660, 1); show(stove, m('stove'), .3); show(stove._smoke, m('stove', .4), .6); tw(stove._smoke, { y: -14 }, m('stove', .4), 2, io);
+    label(p, 'चूल', 980, 710, m('stove', .5), SAFF, 24);
+    // school + child with a bag
+    const sch = sSchool(p, 1300, 660, .75); show(sch, m('school'), .3);
+    const kid = boy(p, 1150, 660, .55); show(kid, m('school', .3), .3); const bag = mk('rect', { x: -40, y: -110, width: 22, height: 30, rx: 5, fill: CORAL }, kid);
+    label(p, 'शाळेची तयारी', 1300, 710, m('school', .5), SKY, 24);
+    // what if?  each role fades, the thing it gives gets a cross
+    const whatIf = (mark, who, str, x, y) => {
+      tw(who, { o: .15 }, m(mark), .5);
+      const g = G(p, { x, y, o: 0, s: .7 });
+      mk('rect', { x: -150, y: -34, width: 300, height: 68, rx: 34, fill: '#fff', stroke: CORAL, 'stroke-width': 3 }, g);
+      T(g, str, { y: 10, size: 24, fill: CORAL, weight: 800, anchor: 'middle', font: HEAD });
+      pop(g, m(mark, .3));
+      return g;
+    };
+    whatIf('nomilk', milk, 'घरात दूध नाही ✗', 700, 420);
+    whatIf('nofarm', farmer, 'अन्न कुठून? ✗', 220, 420);
+    whatIf('noteach', sch, 'मुलं शिकणार कशी? ✗', 1300, 420);
+    const bn = banner(p, 'समाज म्हणजे एकमेकांशी जोडलेलं जीवन.', 800, 820, m('joined', 2.6), { w: 900, color: SKY, size: 36 });
+    const links = G(p, { o: 0 }); [[200, 560, 700, 500], [700, 500, 980, 560], [980, 560, 1300, 520], [200, 560, 1300, 520]].forEach(([a, b, c, d]) => mk('path', { d: `M${a} ${b}Q${(a + c) / 2} ${Math.min(b, d) - 160} ${c} ${d}`, stroke: SKY, 'stroke-width': 3, fill: 'none', 'stroke-dasharray': '10 10' }, links));
+    show(links, m('joined'), .8);
+  }],
+
+  ['bhakri', 'एका पोत्याची गोष्ट', (m) => {
+    const p = panel(0);
+    title(p, 'एका पोत्याची गोष्ट', .1, 90);
+    const stops = [['sack', 'शेतकरी', 180, (g) => sSack(g, 0, 0, 1), LEAF], ['truck', 'वाहतूक करणारा', 490, (g) => sTruck(g, 0, 0, .9), SAFF], ['mill', 'गिरणीवाला', 800, (g) => sMill(g, 0, 0, 1), GREY], ['shop', 'दुकानदार', 1110, (g) => sShop(g, 0, 0, .8), CORAL], ['home', 'घरातील व्यक्ती', 1420, (g) => sHouse(g, 0, 0, .9), ROSE]];
+    S.chain = [];
+    stops.forEach(([mark, who, x, drawer, c], i) => {
+      const g = G(p, { x, y: 400 });
+      const d = drawer(g); show(d, m(mark), .4);
+      const person = sMini(g, 0, 110, c, .9); show(person, m(mark, .2), .3);
+      label(g, who, 0, 150, m(mark, .3), c, 24);
+      if (i) sArrow(p, x - 230, x - 120, 350, SKY, m(mark, -.1), .5);
+      S.chain.push({ el: d, box: [x - 120, 240, 240, 330], label: who });
+    });
+    // the sack becomes flour at the mill, bhakri at home
+    const wheel = S.chain[2].el._wheel; prog(q => put(wheel, { r: q * 720 }), m('mill', .3), 2, lin);
+    const flour = sChip(p, 'पीठ', 800, 210, { color: GREY, size: 26 }); pop(flour, m('mill', 1.2));
+    const plate = sPlate(p, 1420, 660, 1.1); show(plate, m('plate'), .4);
+    note(p, 'एक साधी भाकरी.', 1420, 720, m('plate', 1), SAFF, 30);
+    // count the people
+    const cnt = G(p, { x: 460, y: 690, o: 0, s: .8 });
+    mk('rect', { x: -360, y: -46, width: 720, height: 92, rx: 46, fill: '#fff', stroke: SKY, 'stroke-width': 3 }, cnt);
+    const ct = T(cnt, 'तिच्यामागे किती लोक?', { y: 14, size: 36, fill: SKY, weight: 800, anchor: 'middle', font: HEAD });
+    pop(cnt, m('plate', 2.2));
+    stops.forEach(([, , x, , c], i) => { const r = mk('circle', { cx: x, cy: 590, r: 0, fill: c }, p); tw(r, { 'a_r': 14 }, m('count', i * .55), .3, back); });
+    prog(q => { const n = Math.min(5, Math.floor(q * 5.99)); ct.textContent = n ? `तिच्यामागे ${['एक', 'दोन', 'तीन', 'चार', 'पाच'][n - 1]} लोक` : 'तिच्यामागे किती लोक?'; }, m('count'), 2.8, lin);
+    const inter = banner(p, 'परस्परावलंबन — Interdependence', 800, 820, m('inter', .6), { w: 820, color: SKY, size: 36 });
+  }],
+
+  ['q1', 'छोटी तपासणी', (m) => {
+    const p = panel(0);
+    title(p, 'गहू पीठ कुठे झालं?', .1, 90);
+    const stops = [['शेतकरी', 180, (g) => sSack(g, 0, 0, 1), LEAF], ['वाहतूक', 490, (g) => sTruck(g, 0, 0, .9), SAFF], ['गिरणी', 800, (g) => sMill(g, 0, 0, 1), GREY], ['दुकान', 1110, (g) => sShop(g, 0, 0, .8), CORAL], ['घर', 1420, (g) => sHouse(g, 0, 0, .9), ROSE]];
+    S.q1 = [];
+    stops.forEach(([who, x, drawer, c], i) => {
+      const g = G(p, { x, y: 400 }); const d = drawer(g); show(d, .2 + i * .15, .4);
+      label(g, who, 0, 50, .3 + i * .15, c, 24);
+      if (i) sArrow(p, x - 230, x - 120, 350, SKY, .2 + i * .15, .4);
+      S.q1.push({ el: d, box: [x - 130, 230, 260, 240], label: who });
+    });
+  }, { ask: done => quiz({ x: 250, y: 520, w: 1100, cls: 'side', maxH: 340 }, [{
+    id: 'c-mill', prompt: ['गहू दळून पीठ कुठे तयार झालं? त्या ठिकाणावर टॅप करा.'],
+    build: pickEls(S.q1, 2, 'बरोबर! गिरणीत गहू दळला जातो आणि पीठ तयार होतं. गिरणीवाला हा साखळीतला एक दुवा.',
+      i => ['शेतकऱ्याकडे गहू पिकतो, पण दळला जात नाही. साखळीत पुढे पाहा.', 'वाहतूक करणारा गहू फक्त नेतो. दळतो कोण?', null, 'दुकानात पीठ विकलं जातं, तयार होत नाही. एक पाऊल मागे.', 'घरी पिठाची भाकरी होते. पीठ आधीच कुठे तयार झालं?'][i],
+      () => floatText('पीठ!', 800, 240, SKY)),
+  }], done, 'छोटी तपासणी') }],
+
+  ['community', 'Community — समुदाय', (m) => {
+    const p = panel(0);
+    title(p, 'आपल्या गावातील लोकांचा विचार करा', .1, 90);
+    const groups = [['g1', 'शेतकरी', LEAF, 'short'], ['g2', 'दुकानदार', SAFF, 'short'], ['g3', 'शिक्षक', PLUM, 'long'], ['g4', 'कारागीर', GREY, 'short'], ['g5', 'विद्यार्थी', SKY, 'long']];
+    S.groups = [];
+    groups.forEach(([mark, name, c, hair], i) => {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / 5, x = 800 + Math.cos(a) * 380, y = 500 + Math.sin(a) * 230;
+      const g = G(p, { x, y, o: 0, s: .6 });
+      [-34, 0, 34].forEach((dx, k) => { const mm = sMini(g, dx, k === 1 ? 0 : 10, c, k === 1 ? 1 : .85); put(mm, { o: 1 }); });
+      T(g, name, { y: 44, size: 26, fill: c, weight: 800, anchor: 'middle', font: HEAD });
+      pop(g, m(mark)); S.groups.push(g);
+    });
+    const ring = G(p, { x: 800, y: 500, o: 0, s: .9 });
+    mk('ellipse', { rx: 540, ry: 340, fill: '#eef5ff', stroke: SKY, 'stroke-width': 6, 'stroke-dasharray': '18 14' }, ring);
+    tw(ring, { o: 1, s: 1 }, m('circle'), .8, out);
+    p.insertBefore(ring, p.firstChild);
+    S.groups.forEach(g => { tw(g, { s: 1.12 }, m('circle', .2), .5, back); tw(g, { s: 1 }, m('circle', .7), .4); });
+    banner(p, 'Community — समुदाय', 800, 520, m('circle', 1), { w: 520, color: SKY, size: 40, fill: SKY }).querySelector('text').setAttribute('fill', '#fff');
+    note(p, 'हे सगळे मिळून…', 800, 882, m('circle', .3), SKY, 30);
+  }],
+
+  ['roles', 'Everybody Has a Role', (m) => {
+    const p = panel(0);
+    title(p, 'Everybody Has a Role', .1, 90);
+    text(p, 'गावात प्रत्येक व्यक्तीचं काम महत्त्वाचं असू शकतं.', 800, 150, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    ground(p, 640, .2);
+    const board = g => { const b = G(g, { x: 90, y: 0, o: 0 }); mk('rect', { x: -40, y: -90, width: 80, height: 56, rx: 4, fill: '#1f3b2d', stroke: BARK, 'stroke-width': 3 }, b); T(b, 'क ख ग', { y: -54, size: 24, fill: '#fff', weight: 800, anchor: 'middle', font: HEAD }); return b; };
+    const medic = g => { const c = G(g, { x: 84, y: -60, o: 0 }); mk('circle', { r: 30, fill: '#fff', stroke: CORAL, 'stroke-width': 3 }, c); mk('path', { d: 'M-14 0h28M0 -14v28', stroke: CORAL, 'stroke-width': 8, 'stroke-linecap': 'round' }, c); return c; };
+    const roles = [['r1', 'पाणी आणतं', SKY, 'long', g => sTap(g, 70, 0, 1)], ['r2', 'शेतात काम करतं', LEAF, 'short', g => sField(g, 90, 0, 120, 50)], ['r3', 'घर बांधतं', SAFF, 'short', g => sHouse(g, 90, 0, .55)], ['r4', 'शिकवतं', PLUM, 'long', board], ['r5', 'काळजी घेतं', CORAL, 'long', medic]];
+    S.roleEls = [];
+    roles.forEach(([mark, str, c, hair, drawer], i) => {
+      const x = 170 + i * 315;
+      const g = G(p, { x, y: 640, o: 1 });
+      const person = sPerson(g, 0, 0, .75, c, hair); show(person, m(mark), .4);
+      show(drawer(g), m(mark, .3), .4);
+      label(g, 'कुणी ' + str, 40, 50, m(mark, .4), c, 24);
+      S.roleEls.push(g);
+    });
+    // one role goes missing: the teacher fades, the school task stops
+    const gone = S.roleEls[3];
+    tw(gone, { o: .15 }, m('gap'), .6);
+    const x = sCross(p, 1115, 430, m('gap', .4), CORAL, 30);
+    const txt = text(p, 'मुलं शिकणार कशी?', 1115, 360, m('gap', .7), { size: 26, fill: CORAL, anchor: 'middle', weight: 700 });
+    tw(gone, { o: 1 }, m('all'), .6); hide(x, m('all'), .4); hide(txt, m('all'), .4);
+    banner(p, 'समाज चालण्यासाठी वेगवेगळ्या भूमिका आवश्यक असतात.', 800, 800, m('all', .4), { w: 1060, color: SKY, size: 34 });
+  }],
+
+  ['road', 'एक रस्ता…', (m) => {
+    const p = panel(0);
+    title(p, 'एक रस्ता…', .1, 90);
+    // the road: a grey band with cracks (red) that later fade
+    const road = G(p, { o: 0 }); show(road, m('bad'), .5);
+    mk('rect', { x: 100, y: 560, width: 1400, height: 110, rx: 10, fill: '#cbd5e1' }, road);
+    mk('path', { d: 'M140 615H1460', stroke: '#fff', 'stroke-width': 4, 'stroke-dasharray': '40 30' }, road);
+    const cracks = G(road, { o: 1 });
+    [[300, 575], [520, 640], [760, 585], [1000, 640], [1250, 580]].forEach(([x, y]) => { mk('path', { d: `M${x} ${y}l20 14-10 18 26 12-8 20`, stroke: '#7c2d12', 'stroke-width': 5, fill: 'none', 'stroke-linecap': 'round' }, cracks); mk('ellipse', { cx: x + 10, cy: y + 30, rx: 36, ry: 12, fill: '#92400e', opacity: .35 }, cracks); });
+    const badLbl = label(p, 'रस्ता खराब झाला', 800, 720, m('bad', .5), CORAL, 28);
+    // affected people above the road, each with a cross
+    const hit = (mark, x, drawer, str) => {
+      const g = G(p, { x, y: 540, o: 0 }); const d = drawer(g); put(d, { o: 1 }); show(g, m(mark), .4);
+      sCross(g, 70, -100, m(mark, .5), CORAL, 22);
+      const t = label(p, str, x, 380, m(mark, .6), CORAL, 24);
+      return [g, t];
+    };
+    const a = hit('farmer', 300, g => sCart(g, -60, 0, .7), 'माल नेणं कठीण');
+    const b = hit('kids', 800, g => { const k = G(g, {}); const b1 = boy(k, -30, 0, .6), b2 = boy(k, 30, 0, .6); put(b1, { o: 1 }); put(b2, { o: 1 }); return k; }, 'शाळेत जाणं अवघड');
+    const c = hit('shop', 1300, g => sShop(g, 0, 0, .7), 'माल आणणं कठीण');
+    const one = banner(p, 'एक समस्या · परिणाम अनेकांवर', 800, 240, m('one'), { w: 760, color: CORAL, size: 34 });
+    // people gather
+    hide(one, m('gather'), .4); [a, b, c].forEach(([g, t]) => { hide(g, m('gather'), .4); hide(t, m('gather'), .4); });
+    const crowd = G(p, { o: 0 }); show(crowd, m('gather'), .4);
+    const cols = [LEAF, SAFF, SKY, ROSE, GREY, PLUM, CORAL, LEAF];
+    const ppl = cols.map((col, i) => { const mm = sMini(crowd, 200 + i * 180, 540, col, 1.1); put(mm, { o: 1 }); tw(mm, { x: 520 + i * 80 }, m('gather', .2), 1.4, io); return mm; });
+    const bub = bubble(p, 'चर्चा झाली · मदत मागितली', 800, 330, m('talk'), { w: 560, color: SKY, size: 30 });
+    // repair: cracks fade, road darkens, a tick
+    tw(cracks, { o: 0 }, m('fix'), 1.2);
+    const fresh = mk('rect', { x: 100, y: 560, width: 1400, height: 110, rx: 10, fill: '#94a3b8' }, road); put(fresh, { o: 0 }); road.insertBefore(fresh, road.children[1]); tw(fresh, { o: 1 }, m('fix'), 1.2);
+    hide(badLbl, m('fix'), .4); label(p, 'रस्ता दुरुस्त ✓', 800, 720, m('fix', .8), LEAF, 28);
+    hide(bub, m('coop'), .4);
+    const coop = banner(p, 'Cooperation — सहकार्य', 800, 330, m('coop', .3), { w: 620, color: LEAF, size: 40, fill: LEAF }); coop.querySelector('text').setAttribute('fill', '#fff');
+    note(p, 'तेव्हा समाज मजबूत होतो.', 800, 820, m('strong'), LEAF, 36);
+  }],
+
+  ['conflict', 'Conflict — मतभेद', (m) => {
+    const p = panel(0);
+    title(p, 'पण समाजात नेहमी सगळं शांत असतं का?', .1, 90);
+    note(p, 'नाही.', 800, 160, .9, CORAL, 36);
+    ground(p, 640, .2);
+    const A = sPerson(p, 560, 640, .9, SAFF, 'short'), B = sPerson(p, 1040, 640, .9, PLUM, 'long');
+    show(A, m('two'), .4); show(B, m('two', .2), .4);
+    const b1 = bubble(p, 'इथे विहीर हवी!', 440, 330, m('two', .6), { w: 320, color: SAFF, size: 28 });
+    const b2 = bubble(p, 'नाही, तिथे!', 1160, 330, m('two', 1.2), { w: 300, color: PLUM, size: 28 });
+    const bolt = sBolt(p, 800, 460, 1); pop(bolt, m('bolt')); tw(bolt, { r: 8 }, m('bolt', .3), .15); tw(bolt, { r: -8 }, m('bolt', .45), .15); tw(bolt, { r: 0 }, m('bolt', .6), .15);
+    const nm = banner(p, 'Conflict — संघर्ष / मतभेद', 800, 240, m('name'), { w: 640, color: CORAL, size: 36 });
+    const imp = text(p, 'मतभेद झाले म्हणजे समाज संपला असं नाही.', 800, 760, m('imp', .6), { size: 30, fill: COL.chalk, anchor: 'middle', weight: 700 });
+    // the three steps
+    const steps = [['talk', 'बोलणं', '💬', SKY], ['listen', 'ऐकणं', '👂', LEAF], ['rules', 'नियम', '📏', PLUM]];
+    steps.forEach(([mark, str, ic, c], i) => { const ch = sChip(p, ic + ' ' + str, 560 + i * 240, 840, { color: c, size: 28, font: UI }); pop(ch, m(mark)); });
+    hide(b1, m('ok'), .4); hide(b2, m('ok'), .4); hide(bolt, m('ok'), .4);
+    tw(A, { x: 700 }, m('ok'), 1, io); tw(B, { x: 900 }, m('ok'), 1, io);
+    const hands = G(p, { x: 800, y: 470, o: 0, s: .5 }); mk('circle', { r: 44, fill: '#fff', stroke: LEAF, 'stroke-width': 4 }, hands); T(hands, '🤝', { y: 16, size: 46, anchor: 'middle' }); pop(hands, m('ok', .8));
+    hide(imp, m('ok'), .4); text(p, 'समस्या सोडवता येते.', 800, 760, m('ok', 1), { size: 30, fill: LEAF, anchor: 'middle', weight: 700 });
+  }],
+
+  ['q2', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'c-cc', prompt: ['प्रत्येक प्रसंग सहकार्य (Cooperation) आहे की मतभेद (Conflict)?'],
+    build: grid([
+      { parts: ['गावकरी मिळून शाळेच्या अंगणात झाडं लावतात.'], ans: ['co'], why: 'लोक एकमेकांना मदत करतात. हे सहकार्य.' },
+      { parts: ['पाणी कोणाच्या शेतात आधी जावं यावरून दोन गट भांडतात.'], ans: ['cf'], why: 'दोन गटांचं मत वेगळं, वाद झाला. हे मतभेद.' },
+      { parts: ['पूर आल्यावर शेजारी एकमेकांच्या घरी आसरा देतात.'], ans: ['co'], why: 'संकटात एकमेकांना मदत. हे सहकार्य.' },
+      { parts: ['बाजार कुठे भरावा, यावर दोन दुकानदारांचं एकमत होत नाही.'], ans: ['cf'], why: 'मत वेगळं. हे मतभेद. बोलून, ऐकून सोडवता येईल.' },
+    ], [['co', 'सहकार्य', LEAF], ['cf', 'मतभेद', CORAL]], { multi: false, text: true }),
+  }], done, 'छोटी तपासणी') }],
+
+  ['change', 'समाज बदलतो', (m) => {
+    const p = panel(0);
+    title(p, 'समाज बदलतो', .1, 90);
+    const old = kcard(p, 90, 150, 660, 560, GREY, { o: 0 }); tw(old, { o: 1 }, m('old'), .5);
+    T(old, 'आजी-आजोबांचं गाव', { x: 330, y: 56, size: 34, fill: GREY, weight: 800, anchor: 'middle', font: HEAD });
+    const now = kcard(p, 850, 150, 660, 560, SKY, { o: 0 }); tw(now, { o: 1 }, m('now'), .5);
+    T(now, 'आजचं गाव', { x: 330, y: 56, size: 34, fill: SKY, weight: 800, anchor: 'middle', font: HEAD });
+    // rows: old thing → new thing
+    const row = (mark, y, lo, ro, str, color) => {
+      const a = lo(old); put(a, { o: 0 }); show(a, m(mark), .4);
+      const b = ro(now); put(b, { o: 0 }); show(b, m(mark, .5), .4);
+      sArrow(p, 760, 840, 150 + y, color, m(mark, .3), .4);
+      label(now, str, 500, y + 8, m(mark, .7), color, 24);
+    };
+    row('mobile', 140, g => { const l = G(g, { x: 180, y: 160 }); mk('path', { d: 'M-40 -10h80M0 -10V-60', stroke: GREY, 'stroke-width': 5, 'stroke-linecap': 'round' }, l); T(l, 'निरोप पायी', { y: 20, size: 22, fill: GREY, anchor: 'middle', weight: 700 }); return l; }, g => sPhone(g, 180, 170, 1), 'मोबाईल आले', SKY);
+    row('road', 250, g => { const l = G(g, { x: 180, y: 250 }); mk('path', { d: 'M-90 0q40-30 90-10t90-10', stroke: '#b45309', 'stroke-width': 10, fill: 'none', 'stroke-linecap': 'round' }, l); T(l, 'कच्ची वाट', { y: 34, size: 22, fill: GREY, anchor: 'middle', weight: 700 }); return l; }, g => { const l = G(g, { x: 180, y: 250 }); mk('rect', { x: -90, y: -14, width: 180, height: 28, rx: 6, fill: '#64748b' }, l); mk('path', { d: 'M-70 0H70', stroke: '#fff', 'stroke-width': 3, 'stroke-dasharray': '14 12' }, l); T(l, 'पक्का रस्ता', { y: 40, size: 22, fill: SKY, anchor: 'middle', weight: 700 }); return l; }, 'रस्ते बदलले', SKY);
+    row('school', 380, g => { const l = G(g, { x: 180, y: 420 }); mk('path', { d: 'M-60 0V-40L0 -70L60 -40V0z', fill: '#f5e6c8', stroke: BARK, 'stroke-width': 3 }, l); T(l, 'झाडाखालची शाळा', { y: 30, size: 22, fill: GREY, anchor: 'middle', weight: 700 }); return l; }, g => sSchool(g, 180, 430, .5), 'शाळा बदलल्या', SKY);
+    row('work', 500, g => sCart(g, 120, 530, .6), g => sBus(g, 180, 530, .6), 'व्यवसाय बदलले', SKY);
+    const needs = label(p, 'लोकांच्या गरजा बदलल्या…', 800, 770, m('needs'), COL.dim, 30);
+    banner(p, 'समाजही बदलत राहतो.', 800, 840, m('keeps'), { w: 560, color: SKY, size: 38 });
+  }],
+
+  ['ss', 'मग Social Science कुठे येतं?', (m) => {
+    const p = panel(0);
+    title(p, 'मग Social Science कुठे येतं?', .1, 90);
+    const def = banner(p, 'Social Science = समाजाकडे प्रश्न विचारून पाहण्याची पद्धत', 800, 180, m('def'), { w: 1180, color: SKY, size: 32 });
+    const br = [['hist', 'History', 'पूर्वी काय घडलं?', '🕰️', SAFF], ['geo', 'Geography', 'लोक आणि ठिकाणं कुठे आहेत?', '🗺️', LEAF], ['civ', 'Civics', 'आपला समाज आणि शासन कसं चालतं?', '🏛️', PLUM], ['eco', 'Economics', 'वस्तू, पैसा, संसाधनं कशी वापरतो?', '🪙', CORAL]];
+    br.forEach(([mark, en, q, ic, c], i) => {
+      const x = 100 + i * 355;
+      const g = kcard(p, x, 280, 320, 400, c, { o: 0 }); tw(g, { o: 1 }, m(mark), .5);
+      const icon = T(g, ic, { x: 170, y: 120, size: 70, anchor: 'middle', o: 0 }); show(icon, m(mark, .2), .4);
+      T(g, en, { x: 170, y: 200, size: 36, fill: c, weight: 800, anchor: 'middle', font: HEAD });
+      const words = q.split(' '); const lines = []; let cur = '';
+      words.forEach(w => { if (uiW(cur + ' ' + w, 26) > 270) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w; }); lines.push(cur);
+      lines.forEach((l, k) => { const t = T(g, l, { x: 170, y: 260 + k * 36, size: 26, fill: COL.chalk, weight: 600, anchor: 'middle', o: 0 }); show(t, m(mark, .5 + k * .1)); });
+      const line = path(g, 'M60 230H280', { stroke: c, 'stroke-width': 3 }, { d: 0 }); draw(line, m(mark, .3), .4);
+    });
+    note(p, 'आज आपण फक्त सुरुवात केली.', 800, 790, m('start'), SKY, 36);
+  }],
+
+  ['q3', 'छोटी तपासणी', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'c-branch', prompt: ['प्रत्येक प्रश्न Social Science च्या कोणत्या शाखेचा?'],
+    build: grid([
+      { parts: ['आपल्या गावाची जुनी कहाणी काय आहे? पूर्वी इथे काय घडलं?'], ans: ['h'], why: 'पूर्वी काय घडलं, हा History चा प्रश्न.' },
+      { parts: ['नदी गावाच्या कोणत्या बाजूला आहे? डोंगर कुठे आहेत?'], ans: ['g'], why: 'ठिकाणं कुठे आहेत, हा Geography चा प्रश्न.' },
+      { parts: ['ग्रामपंचायत कशी निवडली जाते? गावाचे नियम कोण ठरवतं?'], ans: ['c'], why: 'समाज आणि शासन कसं चालतं, हा Civics चा प्रश्न.' },
+      { parts: ['बाजारात भाजीचे भाव का वाढले? पैसा कसा वापरला जातो?'], ans: ['e'], why: 'वस्तू, पैसा, संसाधनं, हा Economics चा प्रश्न.' },
+    ], [['h', 'History', SAFF], ['g', 'Geography', LEAF], ['c', 'Civics', PLUM], ['e', 'Economics', CORAL]], { multi: false, text: true }),
+  }], done, 'छोटी तपासणी') }],
+
+  ['look', 'Look Around', (m) => {
+    const p = panel(0);
+    title(p, 'Look Around', .1, 90);
+    text(p, 'तुमचं गाव / तुमचा परिसर तुमच्यासाठी काय-काय करतो?', 800, 150, .5, { size: 28, fill: COL.dim, anchor: 'middle' });
+    const items = [['l1', 'रस्ता', g => { const l = G(g, { x: 0, y: 0, o: 0 }); mk('rect', { x: -70, y: -14, width: 140, height: 28, rx: 6, fill: '#64748b' }, l); mk('path', { d: 'M-50 0H50', stroke: '#fff', 'stroke-width': 3, 'stroke-dasharray': '12 10' }, l); return l; }, GREY], ['l2', 'पाणी', g => sTap(g, 10, 30, 1), SKY], ['l3', 'शाळा', g => sSchool(g, 0, 40, .4), SKY], ['l4', 'दुकान', g => sShop(g, 0, 40, .6), CORAL], ['l5', 'बस', g => sBus(g, 0, 40, .55), SAFF], ['l6', 'आरोग्यसेवा', g => { const c = G(g, { x: 0, y: 0, o: 0 }); mk('circle', { r: 34, fill: '#fff', stroke: CORAL, 'stroke-width': 4 }, c); mk('path', { d: 'M-16 0h32M0 -16v32', stroke: CORAL, 'stroke-width': 9, 'stroke-linecap': 'round' }, c); return c; }, CORAL]];
+    S.lookCards = [];
+    items.forEach(([mark, str, drawer, c], i) => {
+      const x = 100 + i * 235;
+      const g = kcard(p, x, 200, 210, 290, c, { o: 0 }); tw(g, { o: 1 }, m(mark), .4);
+      const inner = G(g, { x: 105, y: 110 }); const d = drawer(inner); show(d, m(mark, .2), .4);
+      T(g, str, { x: 105, y: 190, size: 28, fill: c, weight: 800, anchor: 'middle', font: HEAD });
+      // the people behind it
+      const ppl = G(g, { x: 105, y: 272, o: 0 }); [-30, 0, 30].forEach(dx => { const mm = sMini(ppl, dx, 0, c, .5); put(mm, { o: 1 }); }); show(ppl, m('behind', i * .15), .4);
+      S.lookCards.push(g);
+    });
+    const behind = banner(p, 'प्रत्येक गोष्टीमागे लोकांचा सहभाग आहे.', 800, 560, m('behind', 1), { w: 820, color: SKY, size: 34 });
+    // think like a social scientist
+    const th = text(p, 'Think Like a Social Scientist', 800, 650, m('think'), { size: 40, fill: SKY, weight: 800, anchor: 'middle', font: HEAD });
+    const q1 = bubble(p, '“हे असं का आहे?”', 470, 750, m('q1'), { w: 440, color: SAFF, size: 34 });
+    const q2 = bubble(p, '“याचा परिणाम कोणावर होतो?”', 1130, 750, m('q2'), { w: 560, color: PLUM, size: 34 });
+    note(p, 'हे दोन प्रश्न तुम्हाला समाज समजायला मदत करतील.', 800, 868, m('help'), SKY, 32);
+  }],
+
+  ['english', 'आज फक्त काही शब्द', (m) => {
+    const p = panel(0);
+    title(p, 'आज फक्त काही शब्द', .1);
+    text(p, 'घोकायचे नाहीत. मोठ्याने बोलायचे.', 800, 170, .5, { size: 30, fill: COL.dim, anchor: 'middle' });
+    const row = (en, mr, x, y, mark, drawer) => {
+      const g = kcard(p, x, y, 640, 150, PLUM, { o: 0 }); tw(g, { o: 1 }, m(mark), .5);
+      T(g, en, { x: 60, y: 66, size: 44, fill: PLUM, weight: 800, font: HEAD });
+      T(g, mr, { x: 60, y: 116, size: 30, fill: COL.chalk, weight: 600 });
+      const d = drawer(g); if (d) show(d, m(mark, .3), .4);
+    };
+    row('Society', 'समाज', 120, 220, 'e1', g => { const n = G(g, { x: 520, y: 100, o: 0 }); [[-50, -30], [50, -30], [0, 20], [-40, 30], [40, 30]].forEach(([dx, dy]) => { const mm = sMini(n, dx, dy, SKY, .45); put(mm, { o: 1 }); }); return n; });
+    row('Family', 'कुटुंब', 840, 220, 'e2', g => { const n = G(g, { x: 520, y: 118, o: 0 }); const a = sMini(n, -40, 0, ROSE, .8), b = sMini(n, 40, 0, SKY, .8), c = sMini(n, 0, 6, SAFF, .55); [a, b, c].forEach(e => put(e, { o: 1 })); return n; });
+    row('Community', 'समुदाय', 120, 400, 'e3', g => { const n = G(g, { x: 520, y: 118, o: 0 }); [LEAF, SAFF, PLUM, GREY, SKY].forEach((c, i) => { const mm = sMini(n, -70 + i * 35, 0, c, .6); put(mm, { o: 1 }); }); return n; });
+    row('Village', 'गाव', 840, 400, 'e4', g => { const n = G(g, { x: 520, y: 128, o: 0 }); const h1 = sHouse(n, -50, 0, .45), h2 = sHouse(n, 40, 0, .45, '#fbcfe8'); put(h1, { o: 1 }); put(h2, { o: 1 }); return n; });
+    const more = kcard(p, 120, 590, 1360, 150, SKY, { o: 0 }); tw(more, { o: 1 }, m('more'), .5);
+    T(more, 'आजच्या धड्यातले आणखी दोन:', { x: 60, y: 60, size: 26, fill: COL.dim, weight: 700 });
+    T(more, 'Cooperation — सहकार्य', { x: 60, y: 112, size: 36, fill: LEAF, weight: 800, font: HEAD });
+    T(more, 'Conflict — मतभेद', { x: 760, y: 112, size: 36, fill: CORAL, weight: 800, font: HEAD });
+    note(p, 'मोठ्याने बोला!', 800, 820, m('more', 2.5), SKY, 36);
+  }],
+
+  ['wrap', 'आज आपण काय शिकलो?', (m) => {
+    const p = panel(0);
+    title(p, 'आज आपण काय शिकलो?', .1);
+    [['आपण सगळे एका मोठ्या जाळ्याचा भाग आहोत — Society, समाज.', 'w1', SKY],
+     ['समाज म्हणजे एकमेकांशी जोडलेलं जीवन. एका भाकरीमागेही अनेक लोक.', 'w2', SAFF],
+     ['सहकार्याने समाज मजबूत होतो. मतभेद बोलून, ऐकून, नियमांनी सुटतात.', 'w3', LEAF],
+     ['Social Science = समाजाकडे प्रश्न विचारून पाहण्याची पद्धत.', 'w4', PLUM]].forEach(([str, mark, color], i) => {
+      const g = G(p, { x: -16, y: 250 + i * 120, o: 0 });
+      mk('circle', { cx: 160, cy: -12, r: 28, fill: color }, g);
+      T(g, String(i + 1), { x: 160, y: -1, size: 28, fill: '#fff', weight: 800, anchor: 'middle' });
+      T(g, str, { x: 214, size: 31, weight: 700 });
+      tw(g, { o: 1, x: 0 }, m(mark), .6);
+    });
+  }],
+
+  ['final1', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-word', prompt: ['प्रत्येक प्रसंगाला बरोबर शब्द निवडा.'],
+    build: grid([
+      { parts: ['गावकरी एकत्र येऊन खराब रस्ता दुरुस्त करतात.'], ans: ['co'], why: 'लोक एकमेकांना मदत करतात: Cooperation, सहकार्य.' },
+      { parts: ['शेतकरी, दुकानदार, शिक्षक, कारागीर, विद्यार्थी — हे सगळे मिळून.'], ans: ['cm'], why: 'गावातले वेगवेगळे लोक मिळून Community, समुदाय.' },
+      { parts: ['पाण्यावरून दोन गटांत वाद होतो.'], ans: ['cf'], why: 'दोन गटांचं मत वेगळं, वाद: Conflict, मतभेद.' },
+      { parts: ['आपण सगळे ज्या मोठ्या जाळ्याचा भाग आहोत.'], ans: ['so'], why: 'ते मोठं जाळं म्हणजे Society, समाज.' },
+      { parts: ['भाकरीमागे शेतकरी, गिरणीवाला, दुकानदार… सगळे एकमेकांवर अवलंबून.'], ans: ['in'], why: 'एकमेकांवर अवलंबून असणं: परस्परावलंबन.' },
+    ], [['so', 'Society', SKY], ['cm', 'Community', PLUM], ['co', 'Cooperation', LEAF], ['cf', 'Conflict', CORAL], ['in', 'परस्परावलंबन', SAFF]], { multi: false, text: true }),
+  }], done, 'धड्याचा सराव   १ पैकी २') }],
+
+  ['final2', 'धड्याचा सराव', () => { panel(0); }, { ask: done => quiz(SCREEN, [{
+    id: 'p-society', prompt: ['समाज म्हणजे काय?'],
+    build: choice([
+      ['एकमेकांशी जोडलेलं जीवन — लोक एकमेकांवर अवलंबून असतात.'],
+      ['फक्त एका ठिकाणी राहणाऱ्या लोकांचा समूह.'],
+      ['फक्त आपलं कुटुंब.'],
+      ['फक्त शाळा आणि बाजार.'],
+    ], 0, 'बरोबर! समाज म्हणजे फक्त लोकांचा समूह नाही. समाज म्हणजे एकमेकांशी जोडलेलं जीवन.', [
+      null,
+      'पुस्तक म्हणतं: समाज म्हणजे फक्त लोकांचा समूह नाही. लोक एकमेकांशी जोडलेले असतात, तेव्हा समाज होतो.',
+      'कुटुंब हा समाजाचा एक भाग आहे. शेजारी, शाळा, बाजार, शेतकरी, डॉक्टर… सगळे मिळून समाज.',
+      'शाळा आणि बाजार समाजाचा भाग आहेत, पण समाज त्याहून खूप मोठा आहे: सगळे लोक आणि त्यांचं जोडलेलं जीवन.',
+    ]),
+  }], done, 'धड्याचा सराव   २ पैकी २') }],
+
+  ['finish', 'पूर्ण', () => { panel(0); }, { ask: finishCard }],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

@@ -25,7 +25,7 @@ const BOOK = {
      "subject": "eng",
      "subjectName": "English",
      "ready": true,
-     "minutes": 10,
+     "minutes": 6,
      "pages": [
       13,
       16

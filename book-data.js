@@ -37,7 +37,7 @@ const BOOK = {
      "subject": "life",
      "subjectName": "जीवनकौशल्य",
      "ready": true,
-     "minutes": 13,
+     "minutes": 8,
      "pages": [
       17,
       21

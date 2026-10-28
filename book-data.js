@@ -13,7 +13,7 @@ const BOOK = {
      "subject": "sci",
      "subjectName": "विज्ञान",
      "ready": true,
-     "minutes": 6,
+     "minutes": 8,
      "pages": [
       7,
       12
